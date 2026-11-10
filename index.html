@@ -212,6 +212,7 @@ form{display:grid;gap:12px;max-width:480px}
 .m3d canvas{width:100%;height:100%;display:block}
 #dpanel h2{margin:0}
 #dpanel [hidden],#dpanel[hidden]{display:none}
+#mzrow,#mxrow,#mtrow,#mnrow,#mbdrow,#mrows{display:grid;gap:10px}
 #sel{display:grid;gap:10px;border-top:1px solid var(--line);padding-top:12px}
 #adds .btn{padding:6px 12px;font-size:.88rem}
 #tsel{display:grid;gap:10px;border-top:1px solid var(--line);padding-top:12px}
@@ -584,46 +585,54 @@ body.ied #intro{cursor:default}
  <input type="file" id="mfile" accept=".glb" hidden>
  <p class="note" id="merr" style="margin:0" hidden></p>
  <div id="sel" hidden>
-  <label class="row" id="varow" hidden>Accrochage vertical <select id="vas"><option value="tv">Haut de la télé (comme son contenu)</option><option value="tb">Bas de la télé (suit le bas de la télé)</option><option value="t">Haut de la fenêtre</option><option value="b">Bas de la fenêtre</option></select></label>
-<label class="row" id="hlrow" hidden>Lien caché vers <select id="hls"></select></label>
-<label class="row" id="hcrow" hidden>Curseur « main » au survol <input type="checkbox" id="hcc"></label>
-<div class="row" id="hirow" hidden>Image au survol <input type="file" id="hif" accept="image/*" style="max-width:110px"><button class="btn ghost" id="hix" type="button">Retirer</button></div>
-<div class="row" id="lyrow">Calque <span class="lyb"><button class="btn ghost" id="lyf" type="button" title="Tout devant" aria-label="Tout mettre devant">⤒</button><button class="btn ghost" id="lyu" type="button" title="Avancer d’un calque" aria-label="Avancer d’un calque">▲</button><button class="btn ghost" id="lyd1" type="button" title="Reculer d’un calque" aria-label="Reculer d’un calque">▼</button><button class="btn ghost" id="lyb" type="button" title="Tout derrière" aria-label="Tout mettre derrière">⤓</button></span></div>
-<label class="row">Verrouillé <input type="checkbox" id="lk"></label>
-  <label class="row">Taille <input type="range" id="sz" min="30" max="1500"></label>
-  <label class="row" id="rotrow">Rotation <input type="range" id="rot" min="0" max="360"></label>
+  <label class="row" id="txtrow">Texte <input id="txt" maxlength="30" style="width:150px"></label>
+  <label class="row" id="mbrow" hidden style="flex-direction:column;align-items:stretch">Texte du module <textarea id="mb" rows="3"></textarea></label>
+  <label class="row" id="lkrow">Mène à <select id="lto"></select></label>
+  <button class="btn ghost" id="lkw" type="button" hidden>Modifier cette fenêtre</button>
+  <label class="row" id="hlrow" hidden>Lien caché vers <select id="hls"></select></label>
+  <label class="row" id="ffrow" hidden>Typo <select id="ff"><option value="">Par défaut</option><option value="'Figtree',sans-serif">Texte simple</option><option value="'Pacifico',cursive">Pacifico</option><option value="'Caveat',cursive">Manuscrit</option><option value="'Permanent Marker',cursive">Marqueur</option><option value="'Press Start 2P',monospace">Pixel</option><option value="'VT323',monospace">Terminal</option><option value="'Orbitron',sans-serif">Futuriste</option><option value="'Playfair Display',serif">Élégante</option><option value="'Special Elite',monospace">Machine à écrire</option><option value="Georgia,serif">Serif</option><option value="'Courier New',monospace">Monospace</option></select></label>
+  <div class="row" id="fsrow" hidden><label><input type="checkbox" id="fb"> Gras</label><label><input type="checkbox" id="fi"> Italique</label><label><input type="checkbox" id="fu"> Souligné</label></div>
+  <label class="row" id="mfsrow" hidden>Taille du texte <input type="range" id="mfs" min="40" max="160" step="5" value="100"></label>
+  <div id="mtrow" hidden>
+   <label class="row">Couleur du texte <input type="color" id="mtc" value="#ffffff"></label>
+   <button class="btn ghost" id="mtx" type="button">Couleur du texte automatique</button>
+  </div>
   <label class="row" id="colrow">Couleur <input type="color" id="col" value="#3a5bff"></label>
+  <label class="row" id="bgrow" hidden>Fond <select id="mbg"></select></label>
+  <label class="row" id="mirow" hidden>Image de fond <input type="file" id="mimg" accept="image/*" style="max-width:140px"></label>
+  <div id="mzrow" hidden>
+   <label class="row">Fond image <select id="mbm"><option value="c">Étirée (couvre)</option><option value="r">Répétée (mosaïque)</option></select></label>
+   <label class="row">Motif largeur <input type="range" id="mbw" min="20" max="800" step="10" value="200"></label>
+   <label class="row">Motif hauteur (0 = auto) <input type="range" id="mbh" min="0" max="800" step="10" value="0"></label>
+   </div>
+  <div id="mnrow" hidden>
+   <label class="row">Sans fond <input type="checkbox" id="mnb"></label>
+  </div>
+  <label class="row" id="fxrow" hidden>Animation du fond <select id="zfx"></select></label>
+  <div id="mbdrow" hidden>
+   <label class="row">Sans contour <input type="checkbox" id="mnc"></label>
+   <label class="row">Bordure épaisseur <input type="range" id="mbk" min="0" max="10" step="1" value="3"></label>
+   <label class="row">Bordure couleur <input type="color" id="mbc" value="#ffffff"></label>
+   <button class="btn ghost" id="mbx" type="button">Bordure automatique</button>
+  </div>
+  <label class="row" id="rdrow" hidden>Coins arrondis <input type="range" id="mrd" min="0" max="40" step="1" value="12"></label>
+  <label class="row">Taille <input type="range" id="sz" min="30" max="1500"></label>
+  <label class="row" id="hrow" hidden>Hauteur <input type="range" id="hh" min="40" max="3000"></label>
+  <label class="row" id="yrow" hidden>Position verticale <input type="range" id="yy" min="0" max="3000"></label>
+  <label class="row" id="mpdrow" hidden>Marge intérieure <input type="range" id="mpd" min="0" max="100" step="5" value="100"></label>
+  <label class="row" id="rotrow">Rotation <input type="range" id="rot" min="0" max="360"></label>
   <div id="mrows" hidden>
    <label class="row">Rotation X <input type="range" id="rx" min="0" max="360"></label>
    <label class="row">Rotation Y <input type="range" id="ry" min="0" max="360"></label>
    <label class="row">Rotation Z <input type="range" id="rz" min="0" max="360"></label>
    <label class="row">Rotation automatique <input type="checkbox" id="spin"></label>
   </div>
-  <label class="row" id="txtrow">Texte <input id="txt" maxlength="30" style="width:150px"></label>
-  <label class="row" id="ffrow" hidden>Typo <select id="ff"><option value="">Par défaut</option><option value="'Figtree',sans-serif">Texte simple</option><option value="'Pacifico',cursive">Pacifico</option><option value="'Caveat',cursive">Manuscrit</option><option value="'Permanent Marker',cursive">Marqueur</option><option value="'Press Start 2P',monospace">Pixel</option><option value="'VT323',monospace">Terminal</option><option value="'Orbitron',sans-serif">Futuriste</option><option value="'Playfair Display',serif">Élégante</option><option value="'Special Elite',monospace">Machine à écrire</option><option value="Georgia,serif">Serif</option><option value="'Courier New',monospace">Monospace</option></select></label>
-  <div class="row" id="fsrow" hidden><label><input type="checkbox" id="fb"> Gras</label><label><input type="checkbox" id="fi"> Italique</label><label><input type="checkbox" id="fu"> Souligné</label></div>
-  <div class="row" id="alrow"><span>Aligner</span><span><button type="button" class="btn ghost" data-a="l" title="Gauche">⇤</button><button type="button" class="btn ghost" data-a="c" title="Centre">↔</button><button type="button" class="btn ghost" data-a="r" title="Droite">⇥</button><button type="button" class="btn ghost" data-a="t" title="Haut">⤒</button><button type="button" class="btn ghost" data-a="m" title="Milieu">↕</button><button type="button" class="btn ghost" data-a="b" title="Bas">⤓</button></span></div>
-  <label class="row" id="mvrow">Défilement <select id="mv"><option value="">Aucun</option><option value="l">De droite à gauche</option><option value="r">De gauche à droite</option></select></label>
-  <label class="row" id="mvdrow">Durée de traversée (s) <input type="range" id="mvd" min="4" max="60" step="1"></label>
-  <label class="row" id="glrow">Fixe sur toutes les pages <input type="checkbox" id="gl"></label>
-  <label class="row" id="fxrow" hidden>Animation du fond <select id="zfx"></select></label>
   <label class="row" id="sprow" hidden>Rotation 3D <select id="sp"><option value="">Aucune</option><option value="x">Axe X (bascule)</option><option value="y">Axe Y (pièce)</option><option value="xy">X + Y</option></select></label>
   <label class="row" id="sdrow" hidden>Durée d’un tour (s) <input type="range" id="sd" min="2" max="20" step=".5"></label>
-  <label class="row" id="hvrow">Au survol <select id="hv"><option value="">Aucun</option><option value="grow">Agrandir</option><option value="lift">Soulever</option><option value="tilt">Pivoter</option><option value="glow">Briller</option><option value="pulse">Pulser</option><option value="wiggle">Trembler</option><option value="bounce">Rebondir</option></select></label>
-  <label class="row" id="lkrow">Mène à <select id="lto"></select></label>
-  <button class="btn ghost" id="lkw" type="button" hidden>Modifier cette fenêtre</button>
-  <label class="row" id="hrow" hidden>Hauteur <input type="range" id="hh" min="40" max="3000"></label>
-  <label class="row" id="yrow" hidden>Position verticale <input type="range" id="yy" min="0" max="3000"></label>
-  <label class="row" id="mbrow" hidden style="flex-direction:column;align-items:stretch">Texte du module <textarea id="mb" rows="3"></textarea></label>
-  <label class="row" id="bgrow" hidden>Fond <select id="mbg"></select></label>
-  <label class="row" id="mirow" hidden>Image de fond <input type="file" id="mimg" accept="image/*" style="max-width:140px"></label>
-  <label class="row" id="mfsrow" hidden>Taille du texte <input type="range" id="mfs" min="40" max="160" step="5" value="100"></label>
-  <label class="row" id="mpdrow" hidden>Marge intérieure <input type="range" id="mpd" min="0" max="100" step="5" value="100"></label>
-  <div id="mzrow" hidden>
-   <label class="row">Fond image <select id="mbm"><option value="c">Étirée (couvre)</option><option value="r">Répétée (mosaïque)</option></select></label>
-   <label class="row">Motif largeur <input type="range" id="mbw" min="20" max="800" step="10" value="200"></label>
-   <label class="row">Motif hauteur (0 = auto) <input type="range" id="mbh" min="0" max="800" step="10" value="0"></label>
-   </div>
+  <div class="row" id="alrow"><span>Aligner</span><span><button type="button" class="btn ghost" data-a="l" title="Gauche">⇤</button><button type="button" class="btn ghost" data-a="c" title="Centre">↔</button><button type="button" class="btn ghost" data-a="r" title="Droite">⇥</button><button type="button" class="btn ghost" data-a="t" title="Haut">⤒</button><button type="button" class="btn ghost" data-a="m" title="Milieu">↕</button><button type="button" class="btn ghost" data-a="b" title="Bas">⤓</button></span></div>
+  <label class="row" id="varow" hidden>Accrochage vertical <select id="vas"><option value="tv">Haut de la télé (comme son contenu)</option><option value="tb">Bas de la télé (suit le bas de la télé)</option><option value="t">Haut de la fenêtre</option><option value="b">Bas de la fenêtre</option></select></label>
+  <label class="row" id="glrow">Fixe sur toutes les pages <input type="checkbox" id="gl"></label>
+  <div class="row" id="lyrow">Calque <span class="lyb"><button class="btn ghost" id="lyf" type="button" title="Tout devant" aria-label="Tout mettre devant">⤒</button><button class="btn ghost" id="lyu" type="button" title="Avancer d’un calque" aria-label="Avancer d’un calque">▲</button><button class="btn ghost" id="lyd1" type="button" title="Reculer d’un calque" aria-label="Reculer d’un calque">▼</button><button class="btn ghost" id="lyb" type="button" title="Tout derrière" aria-label="Tout mettre derrière">⤓</button></span></div>
   <div id="mxrow" hidden>
    <label class="row">Images en grille <input type="file" id="mgf" accept="image/*" multiple style="max-width:140px"></label>
    <label class="row">Colonnes <input type="range" id="mgc" min="1" max="8" step="1" value="3"></label>
@@ -632,11 +641,12 @@ body.ied #intro{cursor:default}
    <label class="row">Au survol des images <select id="mgh"><option value="">Aucun</option><option value="grow">Agrandir</option><option value="lift">Soulever</option><option value="tilt">Pivoter</option><option value="glow">Briller</option><option value="pulse">Pulser</option><option value="wiggle">Trembler</option><option value="bounce">Rebondir</option></select></label>
    <div id="mgl"></div>
    <button class="btn ghost" id="mgx" type="button">Vider la grille</button>
-   <label class="row">Bordure épaisseur <input type="range" id="mbk" min="0" max="10" step="1" value="3"></label>
-   <label class="row">Bordure couleur <input type="color" id="mbc" value="#ffffff"></label>
-   <button class="btn ghost" id="mbx" type="button">Bordure automatique</button>
   </div>
-  <label class="row" id="rdrow" hidden>Coins arrondis <input type="range" id="mrd" min="0" max="40" step="1" value="12"></label>
+  <label class="row" id="hvrow">Au survol <select id="hv"><option value="">Aucun</option><option value="grow">Agrandir</option><option value="lift">Soulever</option><option value="tilt">Pivoter</option><option value="glow">Briller</option><option value="pulse">Pulser</option><option value="wiggle">Trembler</option><option value="bounce">Rebondir</option></select></label>
+  <div class="row" id="hirow" hidden>Image au survol <input type="file" id="hif" accept="image/*" style="max-width:110px"><button class="btn ghost" id="hix" type="button">Retirer</button></div>
+  <label class="row" id="hcrow" hidden>Curseur « main » au survol <input type="checkbox" id="hcc"></label>
+  <label class="row" id="mvrow">Défilement <select id="mv"><option value="">Aucun</option><option value="l">De droite à gauche</option><option value="r">De gauche à droite</option></select></label>
+  <label class="row" id="mvdrow">Durée de traversée (s) <input type="range" id="mvd" min="4" max="60" step="1"></label>
   <div id="tprow" class="cmrow" hidden>
    <label class="row">Ajouter des images <input type="file" id="tpf" accept="image/*" multiple style="max-width:140px"></label>
    <label class="row">Taille dans le module <input type="range" id="tpz" min="20" max="72" step="2" value="34"></label>
@@ -651,6 +661,7 @@ body.ied #intro{cursor:default}
    <textarea id="cmsql" rows="9" readonly hidden></textarea>
    <p class="note" id="cmn" style="margin:0">Sans adresse ni clé, les messages restent dans le navigateur de chaque visiteur (non partagés).</p>
   </div>
+  <label class="row">Verrouillé <input type="checkbox" id="lk"></label>
   <div class="row"><button class="btn ghost" id="dup" type="button">Dupliquer</button><button class="btn ghost" id="del" type="button">Supprimer</button></div>
  </div>
  <div id="tsel" hidden>
@@ -948,7 +959,7 @@ body.ied #intro{cursor:default}
  }
  function get(id){return items.filter(function(o){return o.id===id})[0]}
  function el(){return sel&&document.querySelector('[data-id="'+sel+'"]')}
- function sync(){var o=get(sel);$('sel').hidden=!o;if(!o)return;$('lk').checked=!!o.lk;[].forEach.call($('sel').querySelectorAll('input,select,button'),function(c){if(c.id!=='lk')c.disabled=!!o.lk});$('sz').value=o.s;$('rot').value=o.r||0;$('col').value=o.c||'#3a5bff';$('txtrow').hidden=o.k!=='text'&&o.k!=='link'&&o.k!=='module';var fk=o.k==='text'||o.k==='link'||o.k==='module';$('ffrow').hidden=!fk;$('fsrow').hidden=!fk;$('hvrow').hidden=o.k==='zone';if(fk){var ce=el(),tg=ce&&(ce.querySelector('.lb,.mt')||ce);$('ff').value=o.ff||'';$('fb').checked=tg?(+getComputedStyle(tg).fontWeight>=600):!!o.fb;$('fi').checked=!!o.fi;$('fu').checked=!!o.fu}$('hv').value=o.hv||'';var spk=['image','circle','square','triangle','star','text','link'].indexOf(o.k)>=0;$('sprow').hidden=!spk;$('sdrow').hidden=!spk;$('sp').value=o.sp||'';$('sd').value=o.sd||6;$('gl').checked=!!o.g;$('glrow').hidden=o.k==='zone';$('fxrow').hidden=!(o.k==='zone'||o.k==='module');$('zfx').value=o.fx||'';var mvk=o.k!=='zone'&&o.k!=='module';$('mvrow').hidden=!mvk;$('mvdrow').hidden=!mvk;$('mv').value=o.mv||'';$('mvd').value=o.mvd||14;$('alrow').hidden=o.k==='zone';$('colrow').hidden=o.k==='model'||o.k==='image';$('rotrow').hidden=o.k==='model'||o.k==='zone';$('lkrow').hidden=o.k!=='link';var md=o.k==='module',zn=o.k==='zone';$('hrow').hidden=!(md||zn);$('mbrow').hidden=!md;$('bgrow').hidden=!(md||zn);$('mirow').hidden=!(md||zn);$('yrow').hidden=!zn;$('sz').parentNode.hidden=zn;if(md||zn){$('hh').value=o.h||160;$('mb').value=o.b||'';fillMB(o)}if(zn)$('yy').value=o.y;if(o.k==='link')fillTo(o.to);$('lkw').hidden=!(o.k==='link'&&String(o.to).slice(0,2)==='w:');$('mrows').hidden=o.k!=='model';$('rx').value=o.rx||0;$('ry').value=o.ry||0;$('rz').value=o.rz||0;$('spin').checked=!!o.spin;$('txt').value=o.t||'';var cmo=!!o.cm;$('cmrow').hidden=!cmo;if(cmo){$('mbrow').hidden=true;$('cmu').value=o.cu||'';$('cmk').value=o.ck||''}var mdd=o.k==='module';$('rdrow').hidden=!mdd;$('mfsrow').hidden=!mdd;$('mpdrow').hidden=!mdd;if(mdd){$('mrd').value=(o.rd==null||o.rd==='')?12:o.rd;$('mfs').value=o.fs||100;$('mpd').value=(o.pd==null)?100:o.pd;$('mbm').value=o.bm==='r'?'r':'c';$('mbw').value=o.bw||200;$('mbh').value=o.bh||0;$('mgc').value=o.gc||3;$('mgg').value=o.gg==null?6:o.gg;$('mgr').value=o.gr||'';$('mbk').value=o.bk==null?3:o.bk;$('mbc').value=o.bc||'#ffffff';$('mgh').value=o.gh==null?'grow':o.gh;mgList(o)}$('mxrow').hidden=!mdd;$('mzrow').hidden=!(mdd||o.k==='zone');if(o.k==='zone'){$('mbm').value=o.bm==='r'?'r':'c';$('mbw').value=o.bw||200;$('mbh').value=o.bh||0}$('gl').parentNode.hidden=(o.p==='intro');var hlv=o.k!=='link'&&o.k!=='zone'&&o.p!=='intro';$('hlrow').hidden=!hlv;if(hlv){fillHl(o.hl);$('hcrow').hidden=!o.hl;$('hcc').checked=!!o.hc}$('hirow').hidden=(o.k!=='image');var vv=!!(o.g&&o.k!=='zone'&&o.tv===3);$('varow').hidden=!vv;if(vv)$('vas').value=o.va||'tv';var tpo=!!o.tp;$('tprow').hidden=!tpo;if(tpo){$('tpz').value=o.tz||34;fillTp(o)}}
+ function sync(){var o=get(sel);$('sel').hidden=!o;if(!o)return;$('lk').checked=!!o.lk;[].forEach.call($('sel').querySelectorAll('input,select,button'),function(c){if(c.id!=='lk')c.disabled=!!o.lk});$('sz').value=o.s;$('rot').value=o.r||0;$('col').value=o.c||'#3a5bff';$('txtrow').hidden=o.k!=='text'&&o.k!=='link'&&o.k!=='module';var fk=o.k==='text'||o.k==='link'||o.k==='module';$('ffrow').hidden=!fk;$('fsrow').hidden=!fk;$('hvrow').hidden=o.k==='zone';if(fk){var ce=el(),tg=ce&&(ce.querySelector('.lb,.mt')||ce);$('ff').value=o.ff||'';$('fb').checked=tg?(+getComputedStyle(tg).fontWeight>=600):!!o.fb;$('fi').checked=!!o.fi;$('fu').checked=!!o.fu}$('hv').value=o.hv||'';var spk=['image','circle','square','triangle','star','text','link'].indexOf(o.k)>=0;$('sprow').hidden=!spk;$('sdrow').hidden=!spk;$('sp').value=o.sp||'';$('sd').value=o.sd||6;$('gl').checked=!!o.g;$('glrow').hidden=o.k==='zone';$('fxrow').hidden=!(o.k==='zone'||o.k==='module');$('zfx').value=o.fx||'';var mvk=o.k!=='zone'&&o.k!=='module';$('mvrow').hidden=!mvk;$('mvdrow').hidden=!mvk;$('mv').value=o.mv||'';$('mvd').value=o.mvd||14;$('alrow').hidden=o.k==='zone';$('colrow').hidden=o.k==='model'||o.k==='image';$('rotrow').hidden=o.k==='model'||o.k==='zone';$('lkrow').hidden=o.k!=='link';var md=o.k==='module',zn=o.k==='zone';$('hrow').hidden=!(md||zn);$('mbrow').hidden=!md;$('bgrow').hidden=!(md||zn);$('mirow').hidden=!(md||zn);$('yrow').hidden=!zn;$('sz').parentNode.hidden=zn;if(md||zn){$('hh').value=o.h||160;$('mb').value=o.b||'';fillMB(o)}if(zn)$('yy').value=o.y;if(o.k==='link')fillTo(o.to);$('lkw').hidden=!(o.k==='link'&&String(o.to).slice(0,2)==='w:');$('mrows').hidden=o.k!=='model';$('rx').value=o.rx||0;$('ry').value=o.ry||0;$('rz').value=o.rz||0;$('spin').checked=!!o.spin;$('txt').value=o.t||'';var cmo=!!o.cm;$('cmrow').hidden=!cmo;if(cmo){$('mbrow').hidden=true;$('cmu').value=o.cu||'';$('cmk').value=o.ck||''}var mdd=o.k==='module';$('rdrow').hidden=!mdd;$('mfsrow').hidden=!mdd;$('mpdrow').hidden=!mdd;if(mdd){$('mrd').value=(o.rd==null||o.rd==='')?12:o.rd;$('mfs').value=o.fs||100;$('mpd').value=(o.pd==null)?100:o.pd;$('mbm').value=o.bm==='r'?'r':'c';$('mbw').value=o.bw||200;$('mbh').value=o.bh||0;$('mgc').value=o.gc||3;$('mgg').value=o.gg==null?6:o.gg;$('mgr').value=o.gr||'';$('mbk').value=o.bk==null?3:o.bk;$('mbc').value=o.bc||'#ffffff';$('mgh').value=o.gh==null?'grow':o.gh;mgList(o);$('mtc').value=o.tc||'#ffffff';$('mnb').checked=!!o.nb;$('mnc').checked=!!o.nc}$('mxrow').hidden=!mdd;$('mtrow').hidden=!mdd;$('mnrow').hidden=!mdd;$('mbdrow').hidden=!mdd;$('mzrow').hidden=!(mdd||o.k==='zone');if(o.k==='zone'){$('mbm').value=o.bm==='r'?'r':'c';$('mbw').value=o.bw||200;$('mbh').value=o.bh||0}$('gl').parentNode.hidden=(o.p==='intro');var hlv=o.k!=='link'&&o.k!=='zone'&&o.p!=='intro';$('hlrow').hidden=!hlv;if(hlv){fillHl(o.hl);$('hcrow').hidden=!o.hl;$('hcc').checked=!!o.hc}$('hirow').hidden=(o.k!=='image');var vv=!!(o.g&&o.k!=='zone'&&o.tv===3);$('varow').hidden=!vv;if(vv)$('vas').value=o.va||'tv';var tpo=!!o.tp;$('tprow').hidden=!tpo;if(tpo){$('tpz').value=o.tz||34;fillTp(o)}}
  function pick(id){sel=id;if(id)pickT(null);document.querySelectorAll('.deco').forEach(function(e){e.classList.toggle('sel',e.dataset.id===id)});document.querySelectorAll('.zone').forEach(function(e){e.classList.toggle('zsel',e.dataset.id===id)});sync();fillLy()}
  function add(k,x){var o={id:'d'+seq++,p:cur,k:k,x:30,y:Math.max(80,(140-L.getBoundingClientRect().top)/FL()),s:k==='text'?64:120,t:k==='text'?'✨':''};for(var n in x)o[n]=x[n];if(window.__ied){var fg0=x&&x.g;o.p='intro';delete o.g;delete o.tv;delete o.ya;if(fg0||!x||x.y===undefined)o.y=260;if(fg0||!x||x.x===undefined)o.x=40}items.push(o);save();render();pick(o.id)}
  function setEdit(v,w){if(!v&&window.__ied)introEnd();ed=v;mode=w||'d';dp.hidden=!(v&&mode==='d');$('ppanel').hidden=!(v&&mode==='p');if(v){var P=mode==='p'?$('ppanel'):dp,en=mode==='p'?$('pclose'):$('dclose');P.insertBefore($('sel'),en);P.insertBefore($('tsel'),en)}L.classList.toggle('editing',v&&!window.__ied);IS.classList.toggle('editing',!!v&&!!window.__ied);document.body.classList.toggle('ed',v);if(v)pn.hidden=true;pick(null);pickT(null);updPD()}
@@ -1082,7 +1093,7 @@ body.ied #intro{cursor:default}
  document.querySelector('main').appendChild(L);
  var MB=[['Par défaut','',0],['Nuit','linear-gradient(135deg,#0b1026,#2a1a5e)',1],['Soleil','linear-gradient(135deg,#ff9a8b,#ffd36e)',0],['Océan','linear-gradient(135deg,#0f4c75,#3282b8)',1],['Menthe','linear-gradient(135deg,#d9f2e6,#a8e6cf)',0],['Étoilé','radial-gradient(1.5px 1.5px at 20% 30%,#fff,transparent),radial-gradient(1px 1px at 60% 70%,#fff,transparent),radial-gradient(2px 2px at 80% 20%,#cfe,transparent),linear-gradient(160deg,#05060f,#2a0f3d)',1]];
  MB.forEach(function(p,i){var o=document.createElement('option');o.value=i;o.textContent=p[0];$('mbg').appendChild(o)});
- function styMod(e,o){e.style.borderRadius=(o.rd==null||o.rd==='')?'':(+o.rd)+'px';var bi=o.bi?'url("'+o.bi+'") '+(o.bm==='r'?'0 0/'+(o.bw||200)+'px '+(o.bh?o.bh+'px':'auto')+' repeat':'center/cover'):'';var hb=bi||o.bg;e.style.background=hb||'';if(o.k==='module'){e.style.borderWidth=o.bk==null?'':(+o.bk)+'px';e.style.borderColor=o.bc||(hb?'transparent':'')}e.style.color=hb?(o.d?'#fff':'#14213d'):'';e.style.textShadow=hb&&o.d?'0 1px 3px rgba(0,0,0,.6)':''}
+ function styMod(e,o){e.style.borderRadius=(o.rd==null||o.rd==='')?'':(+o.rd)+'px';var bi=o.bi?'url("'+o.bi+'") '+(o.bm==='r'?'0 0/'+(o.bw||200)+'px '+(o.bh?o.bh+'px':'auto')+' repeat':'center/cover'):'';var hb=o.nb?'':(bi||o.bg);e.style.background=o.nb?'transparent':(hb||'');e.style.boxShadow=o.nb?'none':'';if(o.k==='module'){e.style.borderWidth=o.nc?'0':(o.bk==null?'':(+o.bk)+'px');e.style.borderColor=o.bc||(hb?'transparent':'')}e.style.color=hb?(o.d?'#fff':'#14213d'):'';e.style.textShadow=hb&&o.d?'0 1px 3px rgba(0,0,0,.6)':'';if(o.tc&&o.k==='module')e.style.color=o.tc}
  function bgScale(e,o,f){if(o.bi&&o.bm==='r')e.style.backgroundSize=((o.bw||200)*f)+'px '+(o.bh?(o.bh*f)+'px':'auto')}
  function mgrid(e,o){var g=e.querySelector('.mgrid');if(g)g.remove();if(!o.gi||!o.gi.length)return;g=document.createElement('div');g.className='mgrid';g.style.gridTemplateColumns='repeat('+(o.gc||3)+',minmax(0,1fr))';g.style.gap=(o.gg==null?6:o.gg)+'px';var hv=o.gh==null?'grow':o.gh;for(var n=o.gi.length-1;n>=0;n--){var f=document.createElement('figure');f.className='mgi'+(hv?' mgx mgh-'+hv:'');var i=document.createElement('img');i.src=o.gi[n];i.alt=(o.gt&&o.gt[n])||'';i.draggable=false;if(o.gr)i.style.aspectRatio=o.gr;f.appendChild(i);if(o.gt&&o.gt[n]){var c=document.createElement('figcaption');c.textContent=o.gt[n];f.appendChild(c)}g.appendChild(f)}e.appendChild(g)}
  function mgList(o){var c=$('mgl');if(!c)return;c.innerHTML='';if(!o||!o.gi)return;for(var n=o.gi.length-1;n>=0;n--)(function(n){var r=document.createElement('div');r.style.cssText='display:flex;gap:6px;align-items:center;margin:4px 0';var im=document.createElement('img');im.src=o.gi[n];im.style.cssText='width:34px;height:34px;object-fit:cover;border-radius:4px;flex:none';var t=document.createElement('input');t.type='text';t.placeholder='Sous-titre';t.value=(o.gt&&o.gt[n])||'';t.style.cssText='flex:1;min-width:0';t.oninput=function(){o.gt=o.gt||[];o.gt[n]=this.value;var e=el();if(e)mgrid(e,o);save()};var x=document.createElement('button');x.type='button';x.textContent='✕';x.className='btn ghost';x.onclick=function(){o.gi.splice(n,1);if(o.gt)o.gt.splice(n,1);var e=el();if(e)mgrid(e,o);mgList(o);save()};r.appendChild(im);r.appendChild(t);r.appendChild(x);c.appendChild(r);if(o.lk){t.disabled=true;x.disabled=true}})(n)}
@@ -1102,6 +1113,10 @@ body.ied #intro{cursor:default}
  $('mbc').oninput=function(){var o=mxo();if(!o)return;o.bc=this.value;styMod(el(),o);save()};
  $('mbx').onclick=function(){var o=mxo();if(!o)return;delete o.bk;delete o.bc;$('mbk').value=3;styMod(el(),o);save()};
  $('mgh').onchange=function(){var o=mxo();if(!o)return;o.gh=this.value;var e=el();if(e)mgrid(e,o);save()};
+ $('mtc').oninput=function(){var o=mxo();if(!o)return;o.tc=this.value;styMod(el(),o);save()};
+ $('mtx').onclick=function(){var o=mxo();if(!o)return;delete o.tc;$('mtc').value='#ffffff';styMod(el(),o);save()};
+ $('mnb').onchange=function(){var o=mxo();if(!o)return;o.nb=this.checked?1:0;styMod(el(),o);save()};
+ $('mnc').onchange=function(){var o=mxo();if(!o)return;o.nc=this.checked?1:0;styMod(el(),o);save()};
  $('mgx').onclick=function(){var o=mxo();if(!o)return;delete o.gi;delete o.gt;var e=el();if(e)mgrid(e,o);mgList(o);save()};
  $('mgf').onchange=function(){var o=mxo(),fs=[].slice.call(this.files);this.value='';if(!o||!fs.length)return;Promise.all(fs.map(function(f){return new Promise(function(res){var r=new FileReader();r.onload=function(){var im=new Image();im.onload=function(){var k=Math.min(1,500/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);res(c.toDataURL(f.type==='image/png'?'image/png':'image/jpeg',.78))};im.onerror=function(){res(null)};im.src=r.result};r.onerror=function(){res(null)};r.readAsDataURL(f)})})).then(function(a){o.gi=(o.gi||[]).concat(a.filter(Boolean));var e=el();if(e)mgrid(e,o);mgList(o);save()})};
  $('mimg').onchange=function(){var f=this.files[0];this.value='';var o=get(sel);if(!f||!o)return;var r=new FileReader();r.onload=function(){var im=new Image();im.onload=function(){var k=Math.min(1,800/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=im.width*k;c.height=im.height*k;c.getContext('2d').drawImage(im,0,0,c.width,c.height);o.bi=c.toDataURL('image/jpeg',.8);delete o.bg;o.d=1;var e=el();if(e)styMod(e,o);save()};im.src=r.result};r.readAsDataURL(f)};
