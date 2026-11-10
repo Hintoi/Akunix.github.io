@@ -237,6 +237,7 @@ body.ed [data-t].tlkd{outline-style:dotted;outline-color:var(--muted);cursor:not
 #decos{left:0;top:0;right:0;bottom:auto;height:0;overflow:visible}
 aside{overflow:auto}
 .mod{width:var(--s);height:var(--hh,160px);overflow:auto;padding:14px 16px;border-radius:12px;border:3px solid var(--line);background:var(--panel);box-shadow:0 6px 18px rgba(0,0,0,.25);font-size:.95rem}
+.mod:has(.mgrid){height:auto;min-height:var(--hh,160px);overflow:visible}
 .mod h3{margin:0 0 6px;font-family:var(--h)}
 .mod p{margin:0;white-space:pre-wrap}
 .mgrid{display:grid;margin-top:8px}.mgrid figure{margin:0;position:relative}.mgrid figure:hover{z-index:3}.mgrid figure.mgx{pointer-events:auto}.mgi img{position:relative;z-index:2;transition:scale .25s ease,translate .25s ease,rotate .25s ease,filter .25s ease}
@@ -326,7 +327,7 @@ body.fsmode #rgo{display:none}
 body.fsmode #room #rfs{display:block}
 body:not(.fsmode) #rhint{display:none}
 body.plk #room::after{content:'';position:absolute;left:50%;top:50%;width:6px;height:6px;margin:-3px 0 0 -3px;border-radius:50%;background:rgba(255,255,255,.9);box-shadow:0 0 4px #000;pointer-events:none;z-index:5}
-#dock{position:fixed;top:0;right:0;bottom:0;width:300px;z-index:40;overflow:auto;background:color-mix(in srgb,var(--panel) 70%,transparent);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:var(--ink);border-left:1px solid var(--line);display:none;box-shadow:-6px 0 20px rgba(0,0,0,.25)}
+#dock{position:fixed;top:0;right:0;bottom:0;width:410px;max-width:100vw;z-index:40;overflow-y:auto;overflow-x:hidden;background:color-mix(in srgb,var(--panel) 70%,transparent);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:var(--ink);border-left:1px solid var(--line);display:none;box-shadow:-6px 0 20px rgba(0,0,0,.25)}
 body.dockopen #dock{display:block}
 #dock,#dock *:not(input):not(select):not(textarea):not(option){background:transparent!important;box-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
 #dock{background:color-mix(in srgb,var(--panel) var(--dkop,55%),transparent)!important;text-shadow:0 0 3px var(--panel),0 0 8px var(--panel)}
@@ -426,7 +427,7 @@ body.ed .win.wsel{outline:2px solid var(--pop)}
 #wed{display:grid;gap:8px}
 #hud{position:fixed;right:14px;bottom:10px;z-index:9;display:flex;gap:12px;align-items:baseline;font:italic 600 .78rem var(--b);color:var(--ink);opacity:.85;pointer-events:none;text-shadow:0 0 6px rgba(0,0,0,.6)}
 #hud[hidden]{display:none}
-body.dockopen #hud{right:314px}
+body.dockopen #hud{right:424px}
 #alrow button{padding:2px 8px;margin-left:2px}
 @media (max-width:760px){#hud{bottom:4px;right:8px}}
 #wt,#wbd{padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font:inherit}
