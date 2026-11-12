@@ -2334,7 +2334,7 @@ body.ied #intro{cursor:default}
   if(a==='b')o.y=vt+vh-r.height-mg;
   o.x=Math.max(0,o.x);o.y=Math.max(0,Math.round(o.y));e0.style.left=o.x+'%';e0.style.top=o.y+'px';save();
  };
- var HDK='portfolio-hud',hud={s:1,t:1,v:''},SITE_VERSION='bêta 0.1';
+ var HDK='portfolio-hud',hud={s:1,t:1,v:''},SITE_VERSION='bêta 0.1 · maj 13/11';
  try{hud=Object.assign(hud,JSON.parse(localStorage.getItem(HDK)||'{}'))}catch(x){}
  function tickHud(){$('hudt').textContent=new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}
  function applyHud(){$('hud').hidden=!hud.s;$('hudv').textContent=hud.v||SITE_VERSION;$('hudt').hidden=!hud.t;tickHud()}
