@@ -8,7 +8,7 @@
 /* === Synchro GitHub : les personnalisations sont publiées dans site-data.json (+ data/blobs/) === */
 (function(){
 var DATA='site-data.json',BL='data/blobs/',GK='portfolio-gh',MK='portfolio-sync',AK='portfolio-adm';
-var LOCAL={'portfolio-adm':1,'portfolio-gh':1,'portfolio-sync':1,'portfolio-reset1':1,'portfolio-reset2':1,'portfolio-galaxy1':1,'portfolio-demo1':1,'portfolio-lock':1,'portfolio-tlock':1,'portfolio-ui':1,'portfolio-cmloc':1,'portfolio-cmname':1,'portfolio-tpick':1};
+var LOCAL={'portfolio-adm':1,'portfolio-gh':1,'portfolio-sync':1,'portfolio-reset1':1,'portfolio-reset2':1,'portfolio-galaxy1':1,'portfolio-anchor2':1,'portfolio-demo1':1,'portfolio-lock':1,'portfolio-tlock':1,'portfolio-ui':1,'portfolio-cmloc':1,'portfolio-cmname':1,'portfolio-tpick':1};
 var ls,SP=Storage.prototype;
 try{ls=window.localStorage;ls.length}catch(e){return}
 var rg=SP.getItem,rs=SP.setItem,rr=SP.removeItem;
@@ -38,7 +38,7 @@ else{
 /* 2. interception du stockage */
 SP.getItem=function(k){
  if(this===ls&&!admin&&pub.rev>0){
-  if(k==='portfolio-reset1'||k==='portfolio-reset2'||k==='portfolio-galaxy1'||k==='portfolio-demo1')return '1';
+  if(k==='portfolio-reset1'||k==='portfolio-reset2'||k==='portfolio-galaxy1'||k==='portfolio-anchor2'||k==='portfolio-demo1')return '1';
   if(isSync(k))return Object.prototype.hasOwnProperty.call(mem,k)?mem[k]:null;
  }
  return rg.apply(this,arguments)};
@@ -2334,7 +2334,7 @@ body.ied #intro{cursor:default}
   if(a==='b')o.y=vt+vh-r.height-mg;
   o.x=Math.max(0,o.x);o.y=Math.max(0,Math.round(o.y));e0.style.left=o.x+'%';e0.style.top=o.y+'px';save();
  };
- var HDK='portfolio-hud',hud={s:1,t:1,v:''},SITE_VERSION='bêta 0.1 · maj 13/11';
+ var HDK='portfolio-hud',hud={s:1,t:1,v:''},SITE_VERSION='bêta 0.1 · maj 13/11 (2)';
  try{hud=Object.assign(hud,JSON.parse(localStorage.getItem(HDK)||'{}'))}catch(x){}
  function tickHud(){$('hudt').textContent=new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}
  function applyHud(){$('hud').hidden=!hud.s;$('hudv').textContent=hud.v||SITE_VERSION;$('hudt').hidden=!hud.t;tickHud()}
@@ -2562,6 +2562,23 @@ body.ied #intro{cursor:default}
   e.preventDefault();e.stopPropagation()},true);
 })();
  (function(){var mn=document.querySelector('main'),bz=0;function fx(){[].forEach.call(mn.querySelectorAll('section'),function(s){s.classList.toggle('nov',!s.textContent.trim()&&!s.querySelector('img,svg,canvas,iframe,video,button,input,textarea,select'))})}fx();new MutationObserver(function(){if(bz)return;bz=1;requestAnimationFrame(function(){bz=0;fx()})}).observe(mn,{childList:true,subtree:true,characterData:true})})();
+(function(){
+ var mt=setInterval(function(){
+  try{
+   if(!isAdm()||localStorage.getItem('portfolio-anchor2')){clearInterval(mt);return}
+   if(!items||document.body.classList.contains('tvoff')||!REF.t||REF.off)return;
+   var T=tvR();if(T.w<100||T.h<100)return;
+   var ch=0;items.forEach(function(o){
+    if(o.g&&o.k!=='zone'&&o.tv===3&&!o.va){
+     var e=document.querySelector('[data-id="'+o.id+'"]');if(!e)return;
+     var r=e.getBoundingClientRect();
+     if(r.width&&r.top+r.height/2>T.t+T.h/2){o.va='tb';o.y=Math.round(r.top-(T.t+T.h));ch=1}
+    }});
+   if(ch){save();render()}
+   localStorage.setItem('portfolio-anchor2','1');clearInterval(mt);
+  }catch(x){}
+ },1500);
+})();
  render();
 })();
 </script>
