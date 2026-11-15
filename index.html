@@ -192,6 +192,103 @@ window.__rot=(function(){
   return{get:get};
 })();
 </script>
+<script>
+/* Fond « tunnel » : l'image est répétée vers le fond, de plus en plus petite, avec un trou au centre pour voir la suivante */
+window.__mkTunnel=function(kind){
+  var cv=null,cx=null,tc=null,tx=null,im=null,src='',P=null,raf=0,tmr=0,host=null,dpr=1,W=0,H=0,sx=0,sy=0,sw=0,sh=0,t0=0;
+  function dims(){return(kind==='intro'&&host)?[host.clientWidth||innerWidth,host.clientHeight||innerHeight]:[innerWidth,innerHeight]}
+  function ensure(h){
+    if(!cv){
+      cv=document.createElement('canvas');cx=cv.getContext('2d');
+      addEventListener('resize',function(){if(P){size();stopT();loop()}});
+      document.addEventListener('visibilitychange',function(){if(P&&!document.hidden){stopT();loop()}});
+    }
+    if(cv.parentNode!==h){
+      cv.id=kind==='intro'?'tunnelintro':'tunnelbg';
+      cv.style.cssText=kind==='intro'?'position:absolute;left:0;top:0;width:100%;height:100%;z-index:-1;pointer-events:none':'position:fixed;left:0;top:0;width:100vw;height:100vh;z-index:-1;pointer-events:none';
+      h.insertBefore(cv,h.firstChild);
+    }
+    host=h;
+  }
+  function crop(){
+    if(!im||!im.naturalWidth)return;
+    var ia=im.naturalWidth/im.naturalHeight,va=W/H;
+    if(ia>va){sh=im.naturalHeight;sw=sh*va;sx=(im.naturalWidth-sw)/2;sy=0}
+    else{sw=im.naturalWidth;sh=sw/va;sx=0;sy=(im.naturalHeight-sh)/2}
+  }
+  function size(){
+    var d=dims();dpr=Math.min(1.5,window.devicePixelRatio||1);
+    W=Math.max(1,Math.round(d[0]*dpr));H=Math.max(1,Math.round(d[1]*dpr));
+    cv.width=W;cv.height=H;if(!tc)tc=document.createElement('canvas');tc.width=W;tc.height=H;tx=tc.getContext('2d');crop();
+  }
+  function draw(rot){
+    if(!im||!im.naturalWidth||!P)return;
+    var f=P.f,N=Math.max(6,Math.min(70,Math.ceil(Math.log(2/Math.max(W,H))/Math.log(f))+2)),ox=P.x*W,oy=P.y*H;
+    var Rm=Math.sqrt(Math.pow(Math.max(ox,W-ox),2)+Math.pow(Math.max(oy,H-oy),2));
+    function rnd(i){var x=Math.sin(i*12.9898+3.1)*43758.5453;return x-Math.floor(x)}
+    function ang(i){if(i===0)return P.keep?0:rot;var m=1+P.v*(rnd(i)*2-1);return i*P.ta+rot*m*((P.tl&&(i%2))?-1:1)}
+    function poly(c,sc,an){
+      var co=Math.cos(an),si=Math.sin(an),pts=[[-ox*sc,-oy*sc],[(W-ox)*sc,-oy*sc],[(W-ox)*sc,(H-oy)*sc],[-ox*sc,(H-oy)*sc]];
+      pts.forEach(function(q,k){var x=q[0]*co-q[1]*si,y=q[0]*si+q[1]*co;if(k)c.lineTo(x,y);else c.moveTo(x,y)});
+      c.closePath();
+    }
+    cx.clearRect(0,0,W,H);
+    if(!P.keep&&rot!==0){
+      /* image de devant qui tourne : une grande copie derrière évite tout coin vide */
+      var sc0=Rm/Math.max(40,Math.min(ox,W-ox,oy,H-oy));
+      cx.save();cx.translate(ox,oy);cx.rotate(rot);cx.drawImage(im,sx,sy,sw,sh,-ox*sc0,-oy*sc0,W*sc0,H*sc0);cx.restore();
+    }
+    for(var i=N;i>=0;i--){
+      var s1=Math.pow(f,i);
+      if(W*s1<1)continue;
+      var a=P.d*(1-Math.min(1,s1)),an=ang(i),w1=W*s1,h1=H*s1,lx=-ox*s1,ly=-oy*s1;
+      if(P.h){
+        /* mode « centre percé » : chaque image est évidée pour laisser voir la suivante */
+        cx.save();cx.translate(ox,oy);cx.beginPath();poly(cx,s1,an);
+        if(i<N){poly(cx,s1*f,ang(i+1));cx.clip('evenodd')}else cx.clip();
+        cx.rotate(an);cx.drawImage(im,sx,sy,sw,sh,lx,ly,w1,h1);
+        if(a>0.002){cx.fillStyle='rgba(0,0,0,'+a.toFixed(3)+')';cx.fillRect(lx,ly,w1,h1)}
+        cx.restore();
+      }else if(a>0.002){
+        var rb=s1*Rm,ix=Math.max(0,ox-rb),iy=Math.max(0,oy-rb),iw=Math.min(W,ox+rb)-ix,ih=Math.min(H,oy+rb)-iy;
+        if(iw<=0||ih<=0)continue;
+        tx.save();tx.globalCompositeOperation='source-over';tx.clearRect(ix,iy,iw,ih);
+        tx.translate(ox,oy);tx.rotate(an);tx.drawImage(im,sx,sy,sw,sh,lx,ly,w1,h1);tx.restore();
+        tx.save();tx.globalCompositeOperation='source-atop';tx.fillStyle='rgba(0,0,0,'+a.toFixed(3)+')';tx.fillRect(ix,iy,iw,ih);tx.restore();
+        cx.drawImage(tc,ix,iy,iw,ih,ix,iy,iw,ih);
+      }else{
+        cx.save();cx.translate(ox,oy);cx.rotate(an);cx.drawImage(im,sx,sy,sw,sh,lx,ly,w1,h1);cx.restore();
+      }
+    }
+  }
+  function stopT(){if(raf)cancelAnimationFrame(raf);if(tmr)clearTimeout(tmr);raf=0;tmr=0}
+  function loop(){
+    if(!P||document.hidden){raf=0;return}
+    if(kind==='intro'&&host&&!host.getClientRects().length){tmr=setTimeout(loop,300);return}
+    var per=P.tz*1000,t=per>0?6.283185307*((performance.now()-t0)/per):0;
+    draw(t);
+    raf=per>0?requestAnimationFrame(loop):0;
+  }
+  function start(){stopT();t0=performance.now();loop()}
+  function on(s,h){
+    ensure(h||document.body);
+    var red=window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches;
+    P={h:!!s.th,f:Math.max(.4,Math.min(.9,(s.tf||70)/100)),tz:red?0:(s.tz==null?20:+s.tz),ta:(s.ta==null?20:+s.ta)*Math.PI/180,tl:!!s.tl,keep:!!s.tk,v:Math.max(0,Math.min(1,(s.tv==null?60:+s.tv)/100)),d:Math.max(0,Math.min(.9,(s.td==null?40:s.td)/100)),x:(s.tx==null?50:s.tx)/100,y:(s.ty==null?50:s.ty)/100};
+    if(kind==='page')document.documentElement.style.setProperty('--bgimg','none');
+    cv.style.display='block';
+    if(src!==s.v||!im){
+      src=s.v;im=new Image();
+      if(!/^(data|blob):/.test(src))im.crossOrigin='anonymous';
+      im.onload=function(){size();start()};
+      im.src=src;
+    }else{size();start()}
+  }
+  function off(){P=null;stopT();if(cv)cv.style.display='none'}
+  return{on:on,off:off};
+};
+window.__tunnel=window.__mkTunnel('page');
+window.__tunnelIntro=window.__mkTunnel('intro');
+</script>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=Figtree:wght@400;600&family=Pacifico&family=Caveat:wght@500;700&family=Permanent+Marker&family=Press+Start+2P&family=VT323&family=Orbitron:wght@500;800&family=Playfair+Display:ital,wght@0,500;0,800;1,500&family=Special+Elite&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#eef1f4;--panel:#fff;--ink:#14213d;--muted:#5b6478;--side:#14213d;--side-ink:#e8ecf6;--accent:#3a5bff;--pop:#ffc933;--line:#d5dbe5;
@@ -848,11 +945,23 @@ body.ied #intro{cursor:default}
  <label class="row">Couleur libre <input type="color" id="pick" value="#eef1f4"></label>
  <label class="row">Image <input type="file" id="file" accept="image/*" style="max-width:170px"></label>
  <div id="bgtile" hidden>
-  <label class="row">Affichage de l’image <select id="bgm"><option value="c">Étirée (couvre tout)</option><option value="r">Répétée à l’infini</option></select></label>
+  <label class="row">Affichage de l’image <select id="bgm"><option value="c">Étirée (couvre tout)</option><option value="r">Répétée à l’infini</option><option value="t">Tunnel (répétée vers le fond)</option></select></label>
   <label class="row">Largeur du motif <input type="range" id="bgw" min="40" max="1200" step="10" value="300"></label>
   <label class="row">Hauteur du motif (0 = auto) <input type="range" id="bgh" min="0" max="1200" step="10" value="0"></label>
   <label class="row">Rotation aléatoire (°) <input type="range" id="bgra" min="0" max="180" step="5" value="0"></label>
   <button class="btn ghost" id="bgrs" type="button">Tirer au hasard</button>
+  <div id="bgtun" hidden>
+   <label class="row">Réduction par couche (%) <input type="range" id="bgtf" min="40" max="90" step="1" value="70"></label>
+   <label class="row">Rotation (s par tour, 0 = fixe) <input type="range" id="bgtz" min="0" max="60" step="1" value="20"></label>
+   <label class="row">Décalage de rotation par couche (°) <input type="range" id="bgta" min="-90" max="90" step="1" value="20"></label>
+   <label class="row">Assombrir vers le fond (%) <input type="range" id="bgtd" min="0" max="90" step="1" value="40"></label>
+   <label class="row">Centre horizontal (%) <input type="range" id="bgtx" min="0" max="100" step="1" value="50"></label>
+   <label class="row">Centre vertical (%) <input type="range" id="bgty" min="0" max="100" step="1" value="50"></label>
+   <label class="row">Alterner le sens des couches <input type="checkbox" id="bgtl"></label>
+   <label class="row">Variation de vitesse entre les couches (%) <input type="range" id="bgtv" min="0" max="100" step="1" value="60"></label>
+   <label class="row">Garder l’image de devant fixe <input type="checkbox" id="bgtk"></label>
+   <label class="row">Percer le centre (image sans transparence) <input type="checkbox" id="bgth"></label>
+  </div>
  </div>
  <h2 style="font-size:1rem">Fond de la télé</h2>
  <div class="sw" id="tvsw"></div>
@@ -882,6 +991,19 @@ body.ied #intro{cursor:default}
  <label class="row">Fond de l’intro <input type="color" id="ibc" value="#000000"></label>
  <label class="row">Image de fond <input type="file" id="ibf" accept="image/*" style="max-width:120px"></label>
  <button class="btn ghost" id="ibx" type="button">Retirer l’image de fond</button>
+ <label class="row">Affichage de l’image <select id="ibm"><option value="c">Étirée (couvre tout)</option><option value="t">Tunnel (répétée vers le fond)</option></select></label>
+ <div id="ibtun" hidden>
+  <label class="row">Réduction par couche (%) <input type="range" id="ibtf" min="40" max="90" step="1" value="70"></label>
+  <label class="row">Rotation (s par tour, 0 = fixe) <input type="range" id="ibtz" min="0" max="60" step="1" value="20"></label>
+  <label class="row">Décalage de rotation par couche (°) <input type="range" id="ibta" min="-90" max="90" step="1" value="20"></label>
+  <label class="row">Assombrir vers le fond (%) <input type="range" id="ibtd" min="0" max="90" step="1" value="40"></label>
+  <label class="row">Centre horizontal (%) <input type="range" id="ibtx" min="0" max="100" step="1" value="50"></label>
+  <label class="row">Centre vertical (%) <input type="range" id="ibty" min="0" max="100" step="1" value="50"></label>
+  <label class="row">Alterner le sens des couches <input type="checkbox" id="ibtl"></label>
+  <label class="row">Variation de vitesse entre les couches (%) <input type="range" id="ibtv" min="0" max="100" step="1" value="60"></label>
+  <label class="row">Garder l’image de devant fixe <input type="checkbox" id="ibtk"></label>
+  <label class="row">Percer le centre (image sans transparence) <input type="checkbox" id="ibth"></label>
+ </div>
  <label class="row">Texte du bas <input id="ihn" maxlength="40" placeholder="Clique pour continuer" style="width:130px"></label>
  <label class="row">Masquer le texte du bas <input type="checkbox" id="ihh"></label>
  <button class="btn ghost" id="inr" type="button">Rejouer l’intro</button>
@@ -1813,7 +1935,7 @@ body.ied #intro{cursor:default}
  [dp,$('ppanel'),pn].forEach(function(p){dk.appendChild(p)});
  function syncDock(){var o=!dp.hidden||!$('ppanel').hidden||!pn.hidden;document.body.classList.toggle('dockopen',o);[].forEach.call(dk.querySelectorAll('#dtabs button'),function(b){var t=b.dataset.tab;b.classList.toggle('on',t==='d'?!dp.hidden:t==='p'?!$('ppanel').hidden:!pn.hidden)})}
  var mo=new MutationObserver(syncDock);[dp,$('ppanel'),pn].forEach(function(p){mo.observe(p,{attributes:true,attributeFilter:['hidden']})});
- $('dtabs').onclick=function(e){var b=e.target.closest('button');if(!b)return;var t=b.dataset.tab;if(t==='d')setEdit(true,'d');else if(t==='p')setEdit(true,'p');else{setEdit(false);pn.hidden=false}};
+ $('dtabs').onclick=function(e){var b=e.target.closest('button');if(!b)return;var t=b.dataset.tab;if(t==='d')setEdit(true,'d');else if(t==='p')setEdit(true,'p');else{var wi=window.__ied;window.__ied=false;setEdit(false);window.__ied=wi;pn.hidden=false}};
  syncDock();
  var TRM='portfolio-trans',tm={m:'s',d:900,imgs:[],sn:{}},trBusy=false,tmc={},tsu={},tact=0;
  try{tm=Object.assign(tm,JSON.parse(localStorage.getItem(TRM)||'{}'))}catch(x){}
@@ -1979,9 +2101,9 @@ body.ied #intro{cursor:default}
  fillR();
  function apply(s){
   ['--bg','--panel','--ink','--muted','--line','--bgimg'].forEach(function(k){root.style.removeProperty(k)});
-  root.classList.remove('hasimg');
+  root.classList.remove('hasimg');if(window.__tunnel)window.__tunnel.off();
   if(!s||!s.v)s={t:'c',v:'#000',d:1,st:1};
-  if(s.t==='i'){root.style.setProperty('--bgimg','url("'+s.v+'")');root.style.setProperty('--bgsz',s.m==='r'?((s.w||300)+'px '+(s.h?s.h+'px':'auto')):'cover');root.style.setProperty('--bgrep',s.m==='r'?'repeat':'no-repeat');root.classList.add('hasimg');if(s.m==='r'&&s.ra>0)window.__rot.get('pg',s.v,s.w||300,s.h||0,s.ra,s.rs||1,function(r){root.style.setProperty('--bgimg','url("'+r.url+'")');root.style.setProperty('--bgsz',r.w+'px '+r.h+'px')})}
+  if(s.t==='i'){root.style.setProperty('--bgimg','url("'+s.v+'")');root.style.setProperty('--bgsz',s.m==='r'?((s.w||300)+'px '+(s.h?s.h+'px':'auto')):'cover');root.style.setProperty('--bgrep',s.m==='r'?'repeat':'no-repeat');root.classList.add('hasimg');if(s.m==='t')window.__tunnel.on(s);if(s.m==='r'&&s.ra>0)window.__rot.get('pg',s.v,s.w||300,s.h||0,s.ra,s.rs||1,function(r){root.style.setProperty('--bgimg','url("'+r.url+'")');root.style.setProperty('--bgsz',r.w+'px '+r.h+'px')})}
   else{root.style.setProperty('--bg',s.v);var c=s.d?['#172038','#eef1fa','#9aa5bf','#2a3555']:['#fff','#14213d','#5b6478','#d5dbe5'];['--panel','--ink','--muted','--line'].forEach(function(k,i){root.style.setProperty(k,c[i])})}
   stars(!!s.st);
  }
@@ -1990,9 +2112,19 @@ body.ied #intro{cursor:default}
  $('stc').checked=!!curS().st;
  $('stc').onchange=function(){var s=Object.assign({},curS());s.st=this.checked?1:0;set(s)};
  var bgt;
- function syncBgTile(){var s=curS();if(!$('bgtile'))return;$('bgtile').hidden=s.t!=='i';$('bgm').value=s.m==='r'?'r':'c';$('bgw').value=s.w||300;$('bgh').value=s.h||0;$('bgra').value=s.ra||0}
+ function syncBgTile(){var s=curS();if(!$('bgtile'))return;$('bgtile').hidden=s.t!=='i';$('bgm').value=(s.m==='r'||s.m==='t')?s.m:'c';$('bgtun').hidden=s.m!=='t';$('bgtf').value=s.tf||70;$('bgtz').value=s.tz==null?20:s.tz;$('bgta').value=s.ta==null?20:s.ta;$('bgtl').checked=!!s.tl;$('bgtv').value=s.tv==null?60:s.tv;$('bgtk').checked=!!s.tk;$('bgtd').value=s.td==null?40:s.td;$('bgtx').value=s.tx==null?50:s.tx;$('bgty').value=s.ty==null?50:s.ty;$('bgth').checked=!!s.th;$('bgw').value=s.w||300;$('bgh').value=s.h||0;$('bgra').value=s.ra||0}
  function bgT(k,v){var s=Object.assign({},curS());if(s.t!=='i')return;s[k]=v;st=s;apply(s);clearTimeout(bgt);bgt=setTimeout(function(){try{localStorage.setItem(KEY,JSON.stringify(s))}catch(x){}},300)}
- $('bgm').onchange=function(){bgT('m',this.value)};
+ $('bgm').onchange=function(){$('bgtun').hidden=this.value!=='t';bgT('m',this.value)};
+ $('bgtf').oninput=function(){bgT('tf',+this.value)};
+ $('bgtz').oninput=function(){bgT('tz',+this.value)};
+ $('bgtd').oninput=function(){bgT('td',+this.value)};
+ $('bgtx').oninput=function(){bgT('tx',+this.value)};
+ $('bgty').oninput=function(){bgT('ty',+this.value)};
+ $('bgth').onchange=function(){bgT('th',this.checked?1:0)};
+ $('bgta').oninput=function(){bgT('ta',+this.value)};
+ $('bgtl').onchange=function(){bgT('tl',this.checked?1:0)};
+ $('bgtv').oninput=function(){bgT('tv',+this.value)};
+ $('bgtk').onchange=function(){bgT('tk',this.checked?1:0)};
  $('bgw').oninput=function(){bgT('w',+this.value)};
  $('bgh').oninput=function(){bgT('h',+this.value)};
  $('bgra').oninput=function(){bgT('ra',+this.value)};
@@ -2639,7 +2771,7 @@ body.ied #intro{cursor:default}
  function fitIS(){var k=Math.min(innerWidth/1280,innerHeight/720);IS.style.transform='translate(-50%,-50%) scale('+k+')';IS.style.top='';IS._k=k}
  window.addEventListener('resize',fitIS);
  function introHas(){return !!items&&items.some(function(o){return o.p==='intro'})}
- function applyIntroUi(){var it=$('intro'),h=$('introh'),t=ins.hh?'':(ins.h||'Clique pour continuer');it.style.backgroundColor=ins.bg||'';it.style.backgroundImage=(ins.bgi&&IBG.u)?'url("'+IBG.u+'")':'';it.style.backgroundSize='cover';it.style.backgroundPosition='center';h.textContent=t;h.hidden=!t}
+ function applyIntroUi(){var it=$('intro'),h=$('introh'),t=ins.hh?'':(ins.h||'Clique pour continuer');it.style.backgroundColor=ins.bg||'';var tun=!!(ins.bgi&&IBG.u&&ins.bgm==='t');it.style.backgroundImage=(ins.bgi&&IBG.u&&!tun)?'url("'+IBG.u+'")':'';if(tun)window.__tunnelIntro.on({v:IBG.u,th:ins.th,ta:ins.ta,tl:ins.tl,tk:ins.tk,tv:ins.tv,tf:ins.tf,tz:ins.tz,td:ins.td,tx:ins.tx,ty:ins.ty},it);else window.__tunnelIntro.off();it.style.backgroundSize='cover';it.style.backgroundPosition='center';h.textContent=t;h.hidden=!t}
  function ibgLoad(){if(!ins.bgi||IBG.u)return;dbGet('ibg').then(function(b){if(b){IBG.u=URL.createObjectURL(b);applyIntroUi()}}).catch(function(){})}
  function introEdit(){window.__ied=true;document.body.classList.add('ied');var it=$('intro');it.hidden=false;it.style.opacity=1;$('introt').textContent='';applyIntroUi();fitIS();setEdit(true,'d');render()}
  function introEnd(){window.__ied=false;document.body.classList.remove('ied');$('intro').hidden=true;IS.classList.remove('editing');fitIS()}
@@ -2648,11 +2780,17 @@ body.ied #intro{cursor:default}
  (function(){var v=null;try{v=localStorage.getItem('portfolio-tvm')}catch(x){}var n=(v===null||v==='')?28:+v;$('tvm').value=n;if(v!==null)document.documentElement.style.setProperty('--tvm',n+'px')})();
  $('tvm').oninput=function(){setTvm(+this.value,true)};
 
- $('ibc').value=ins.bg||'#000000';$('ihn').value=ins.h||'';$('ihh').checked=!!ins.hh;
+ $('ibc').value=ins.bg||'#000000';$('ibm').value=ins.bgm==='t'?'t':'c';$('ibtun').hidden=ins.bgm!=='t';$('ibtf').value=ins.tf||70;$('ibtz').value=ins.tz==null?20:ins.tz;$('ibta').value=ins.ta==null?20:ins.ta;$('ibtl').checked=!!ins.tl;$('ibtv').value=ins.tv==null?60:ins.tv;$('ibtk').checked=!!ins.tk;$('ibtd').value=ins.td==null?40:ins.td;$('ibtx').value=ins.tx==null?50:ins.tx;$('ibty').value=ins.ty==null?50:ins.ty;$('ibth').checked=!!ins.th;$('ihn').value=ins.h||'';$('ihh').checked=!!ins.hh;
  $('ibc').oninput=function(){ins.bg=this.value;saveIn();applyIntroUi()};
  $('ihn').oninput=function(){ins.h=this.value;saveIn();applyIntroUi()};
  $('ihh').onchange=function(){ins.hh=this.checked?1:0;saveIn();applyIntroUi()};
  $('ibf').onchange=function(){var f=this.files[0];this.value='';if(!f)return;dbPut('ibg',f).then(function(){if(IBG.u)try{URL.revokeObjectURL(IBG.u)}catch(x){}IBG.u='';ins.bgi=1;saveIn();ibgLoad()}).catch(function(){})};
+ $('ibth').onchange=function(){ins.th=this.checked?1:0;saveIn();applyIntroUi()};
+ $('ibtl').onchange=function(){ins.tl=this.checked?1:0;saveIn();applyIntroUi()};
+ $('ibtv').oninput=function(){ins.tv=+this.value;saveIn();applyIntroUi()};
+ $('ibtk').onchange=function(){ins.tk=this.checked?1:0;saveIn();applyIntroUi()};
+ $('ibm').onchange=function(){ins.bgm=this.value;$('ibtun').hidden=this.value!=='t';saveIn();applyIntroUi()};
+ [['ibtf','tf'],['ibtz','tz'],['ibta','ta'],['ibtd','td'],['ibtx','tx'],['ibty','ty']].forEach(function(q){$(q[0]).oninput=function(){ins[q[1]]=+this.value;saveIn();applyIntroUi()}});
  $('ibx').onclick=function(){ins.bgi=0;saveIn();dbDel('ibg').catch(function(){});if(IBG.u)try{URL.revokeObjectURL(IBG.u)}catch(x){}IBG.u='';applyIntroUi()};
  IS.addEventListener('pointerdown',function(e){
   if(!ed||!window.__ied)return;var t=e.target.closest('.deco');if(!t)return;
