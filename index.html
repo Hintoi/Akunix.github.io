@@ -8,12 +8,21 @@
 /* === Synchro GitHub : les personnalisations sont publiées dans site-data.json (+ data/blobs/) === */
 (function(){
 var DATA='site-data.json',BL='data/blobs/',GK='portfolio-gh',MK='portfolio-sync',AK='portfolio-adm';
-var LOCAL={'portfolio-adm':1,'portfolio-gh':1,'portfolio-sync':1,'portfolio-reset1':1,'portfolio-reset2':1,'portfolio-galaxy1':1,'portfolio-anchor2':1,'portfolio-demo1':1,'portfolio-lock':1,'portfolio-tlock':1,'portfolio-ui':1,'portfolio-cmloc':1,'portfolio-cmname':1,'portfolio-tpick':1};
+var LOCAL={'portfolio-adm':1,'portfolio-gh':1,'portfolio-sync':1,'portfolio-reset1':1,'portfolio-reset2':1,'portfolio-galaxy1':1,'portfolio-anchor2':1,'portfolio-demo1':1,'portfolio-lock':1,'portfolio-tlock':1,'portfolio-ui':1,'portfolio-cmloc':1,'portfolio-cmname':1,'portfolio-tpick':1,'portfolio-idb1':1};
 var ls,SP=Storage.prototype;
 try{ls=window.localStorage;ls.length}catch(e){return}
 var rg=SP.getItem,rs=SP.setItem,rr=SP.removeItem;
 function isSync(k){return typeof k==='string'&&k.indexOf('portfolio-')===0&&!LOCAL[k]}
 function rl(){location.reload()}
+/* stockage des données du site : IndexedDB (via localForage) pour l’admin, copie en mémoire lue de façon synchrone par le site */
+var idb=false,store={},LFX=null,inflight=0,gateDone=false,idbErr='',HAS=Object.prototype.hasOwnProperty;
+function kkeys(){var a=[],i,k;if(idb){for(k in store)if(HAS.call(store,k)&&isSync(k))a.push(k)}else for(i=0;i<ls.length;i++){k=ls.key(i);if(isSync(k))a.push(k)}return a}
+function kget(k){return idb?(HAS.call(store,k)?store[k]:null):rg.call(ls,k)}
+function kset(k,v){v=String(v);if(idb){store[k]=v;persist(k)}else rs.call(ls,k,v)}
+function kdel(k){if(idb){delete store[k];persist(k)}else rr.call(ls,k)}
+function persist(k){var v=HAS.call(store,k)?store[k]:undefined;inflight++;
+ var p=(v===undefined)?LFX.del(k):LFX.set(k,v);
+ p.then(function(){inflight--},function(e){inflight--;warnWrite(k,e)})}
 /* 1. données publiées (lecture synchrone : le site lit son stockage dès le départ) */
 var pub={kv:{},blobs:{},rev:0};
 try{var x=new XMLHttpRequest();x.open('GET',DATA+'?t='+Date.now(),false);x.send();if(x.status===200){var j=JSON.parse(x.responseText);if(j&&j.kv)pub=j}}catch(e){}
@@ -24,34 +33,33 @@ meta.blobs=meta.blobs||{};meta.up=meta.up||{};meta.del=meta.del||{};
 function saveMeta(){try{rs.call(ls,MK,JSON.stringify(meta))}catch(e){}}
 var mem={},ver=0;
 if(!admin){Object.keys(pub.kv).forEach(function(k){mem[k]=pub.kv[k]})}
-else{
+function adminInit(){
  var pend=Object.keys(meta.up).length||Object.keys(meta.del).length;
  if(pub.rev&&!meta.dirty&&!pend&&pub.rev>=(meta.rev||0)){
-  var old=[];for(var i=0;i<ls.length;i++){var kk=ls.key(i);if(isSync(kk))old.push(kk)}
-  old.forEach(function(k){rr.call(ls,k)});
-  Object.keys(pub.kv).forEach(function(k){try{rs.call(ls,k,pub.kv[k])}catch(e){}});
+  kkeys().forEach(function(k){kdel(k)});
+  Object.keys(pub.kv).forEach(function(k){try{kset(k,pub.kv[k])}catch(e){}});
   meta.blobs=Object.assign({},pub.blobs);meta.rev=pub.rev;meta.dirty=false;
  }else if(!pub.rev&&!meta.rev){meta.dirty=true}
  if(pub.rev&&!rg.call(ls,'portfolio-demo1'))try{rs.call(ls,'portfolio-demo1','1')}catch(e){}
  saveMeta();
 }
 /* 2. interception du stockage */
-SP.getItem=function(k){
+SP.getItem=function(k){if(this===ls&&idb&&isSync(k))return HAS.call(store,k)?store[k]:null;
  if(this===ls&&!admin&&pub.rev>0){
   if(k==='portfolio-reset1'||k==='portfolio-reset2'||k==='portfolio-galaxy1'||k==='portfolio-anchor2'||k==='portfolio-demo1')return '1';
   if(isSync(k))return Object.prototype.hasOwnProperty.call(mem,k)?mem[k]:null;
  }
  return rg.apply(this,arguments)};
-SP.setItem=function(k,v){
+SP.setItem=function(k,v){if(this===ls&&idb&&isSync(k)){v=String(v);if(HAS.call(store,k)&&store[k]===v)return;store[k]=v;persist(k);touch();return}
  if(this===ls){
   if(k===AK){rs.apply(this,arguments);if(!admin){if(pub.rev>0)setTimeout(rl,60);else goAdmin()}return}
   if(isSync(k)){
    if(!admin){if(pub.rev>0){mem[k]=String(v);return}return rs.apply(this,arguments)}
    if(rg.call(ls,k)===String(v))return;
-   rs.apply(this,arguments);touch();return}
+   try{rs.apply(this,arguments)}catch(e){warnFull(k,e);throw e}touch();return}
  }
  return rs.apply(this,arguments)};
-SP.removeItem=function(k){
+SP.removeItem=function(k){if(this===ls&&idb&&isSync(k)){if(!HAS.call(store,k))return;delete store[k];persist(k);touch();return}
  if(this===ls){
   if(k===AK){var w=admin;rr.apply(this,arguments);if(w){if(pub.rev>0)setTimeout(rl,60);else admin=false}return}
   if(isSync(k)){
@@ -69,13 +77,70 @@ window.__ps={
  put:function(k){if(!admin)return;delete meta.del[k];if(first())return;meta.up[k]=1;saveMeta();if(ready())enq(function(){return uploadBlob(k)});else setSt('cfg')},
  del:function(k){if(!admin)return;delete meta.up[k];if(meta.blobs[k]){delete meta.blobs[k];meta.del[k]=1;meta.dirty=true;ver++;saveMeta();if(ready()){enq(function(){return delRemote(k)});sched()}else setSt('cfg')}}
 };
+/* 3b. stockage du navigateur : alerte si plein, jauge, sauvegarde, allègement des images */
+var CAP=5242880,usePct=0,lastWarn=0;
+function usage(){var t=0,i,k;kkeys().forEach(function(k){t+=k.length+(kget(k)||'').length});for(i=0;i<ls.length;i++){k=ls.key(i);if(!isSync(k))t+=k.length+(rg.call(ls,k)||'').length}return t}
+function fmtM(n){return (n/1e6).toFixed(2).replace('.',',')}
+function updUse(){var t=usage(),u=document.getElementById('psu');
+ if(idb){usePct=0;if(u){u.textContent='Stockage : IndexedDB, '+fmtM(t)+' M de caractères (plus de limite de 5 Mo)';u.style.color=''}
+  if(navigator.storage&&navigator.storage.estimate)navigator.storage.estimate().then(function(e){if(!e||!e.quota)return;var p=Math.round(e.usage/e.quota*100);usePct=p>=85?p:0;if(u)u.textContent+=' · '+p+' % de l’espace autorisé par le navigateur';if(pill)setSt(st,stMsg)}).catch(function(){});
+  if(pill)setSt(st,stMsg);return}
+ usePct=Math.round(t/CAP*100);
+ if(u){u.textContent='Stockage du navigateur : '+fmtM(t)+' M / ≈ '+fmtM(CAP)+' M caractères ('+usePct+' %)';u.style.color=usePct>=95?'#f88':usePct>=80?'#fb3':''}
+ if(pill)setSt(st,stMsg)}
+function toast(m){if(!document.body)return;var d=document.getElementById('pstoast');
+ if(!d){d=document.createElement('div');d.id='pstoast';d.style.cssText='position:fixed;left:50%;top:14px;transform:translateX(-50%);z-index:200;max-width:min(560px,92vw);background:#b3261e;color:#fff;padding:12px 16px;border-radius:12px;font:600 .9rem/1.4 system-ui,sans-serif;box-shadow:0 6px 24px rgba(0,0,0,.4);cursor:pointer';d.onclick=function(){d.remove();if(pm)pm.hidden=false};document.body.appendChild(d)}
+ d.textContent=m;clearTimeout(d._t);d._t=setTimeout(function(){d.remove()},14000)}
+function warnFull(k,e){if(!admin)return;var q=e&&(e.name==='QuotaExceededError'||e.code===22||e.code===1014||/quota/i.test(String(e.message||'')));if(!q)return;
+ var nm=String(k).replace('portfolio-','');
+ setSt('err','Stockage du navigateur plein : « '+nm+' » n’a pas été enregistré');updUse();
+ var n=Date.now();if(n-lastWarn<6000)return;lastWarn=n;
+ toast('⚠ Stockage du navigateur plein : la dernière modification (« '+nm+' ») n’a PAS été enregistrée. Clique ici, puis « Optimiser les images ».')}
+function warnWrite(k,e){if(!admin)return;var nm=String(k).replace('portfolio-','');
+ setSt('err','Écriture IndexedDB impossible pour « '+nm+' » : '+((e&&e.message)||e));
+ var n=Date.now();if(n-lastWarn<6000)return;lastWarn=n;
+ toast('⚠ Impossible d’enregistrer « '+nm+' » dans IndexedDB ('+((e&&e.name)||'erreur')+'). Clique ici pour voir l’état de la synchro.')}
+function backup(){var o={v:1,date:new Date().toISOString(),kv:{}};
+ kkeys().forEach(function(k){o.kv[k]=kget(k)});
+ var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(o)],{type:'application/json'}));a.download='portfolio-sauvegarde-'+o.date.slice(0,10)+'.json';document.body.appendChild(a);a.click();
+ setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},2000)}
+var IMG=/data:image\/(?:png|jpe?g|webp);base64,[A-Za-z0-9+\/=]+/g;
+function recode(u){return new Promise(function(ok){var im=new Image();im.onerror=function(){ok(null)};
+ im.onload=function(){try{
+  var w=im.naturalWidth,h=im.naturalHeight;if(!w||!h)return ok(null);
+  var sc=Math.min(1,2560/Math.max(w,h)),W=Math.max(1,Math.round(w*sc)),H=Math.max(1,Math.round(h*sc)),c=document.createElement('canvas');c.width=W;c.height=H;
+  var x=c.getContext('2d');x.drawImage(im,0,0,W,H);
+  var d=x.getImageData(0,0,W,H).data,alpha=false,seen={},nc=0,i;
+  for(i=0;i<d.length;i+=4){if(d[i+3]<250)alpha=true;if(nc<8000){var ky=(d[i]<<16)|(d[i+1]<<8)|d[i+2];if(!seen[ky]){seen[ky]=1;nc++}}}
+  var flat=nc<8000,r=null;
+  if(flat||alpha){var q=c.toDataURL('image/webp',flat?1:.85);if(q.indexOf('data:image/webp')===0)r=q}
+  else r=c.toDataURL('image/jpeg',.85);
+  ok(r&&r.length<u.length*.8?r:null)
+ }catch(e){ok(null)}};im.src=u})}
+function optimize(){
+ var found={},keys=[],i,m,k,v;
+ kkeys().forEach(function(k2){var v2=kget(k2)||'',m2;IMG.lastIndex=0;while((m2=IMG.exec(v2))){if(m2[0].length>120000){found[m2[0]]=null;if(keys.indexOf(k2)<0)keys.push(k2)}}});
+ var us=Object.keys(found);
+ if(!us.length){alert('Aucune grosse image à alléger dans le stockage.');return}
+ var n=0,p=Promise.resolve();
+ us.forEach(function(u){p=p.then(function(){setSt('run','Analyse des images '+(++n)+'/'+us.length+'…');return recode(u).then(function(r){found[u]=r})})});
+ p.then(function(){
+  var gain=0,cnt=0;us.forEach(function(u){if(found[u]){gain+=u.length-found[u].length;cnt++}});
+  setSt(meta.dirty?'dirty':'ok');
+  if(!cnt){alert('Les images sont déjà bien compressées : rien à gagner de ce côté. Le stockage contient d’autres données lourdes (voir la liste des plus grosses entrées dans la console).');return}
+  if(!confirm(cnt+' image(s) sur '+us.length+' peuvent être allégées (≈ '+fmtM(gain)+' M de caractères libérés). Une sauvegarde va d’abord être téléchargée. Continuer ?'))return;
+  backup();
+  keys.forEach(function(k){var v0=kget(k)||'',nv=v0.replace(IMG,function(t){return found[t]||t});if(nv!==v0){try{SP.setItem.call(ls,k,nv)}catch(e){warnFull(k,e)}}});
+  updUse();setSt('run','Images allégées, rechargement…');setTimeout(function(){location.reload()},1800)
+ }).catch(function(e){setSt('err',(e&&e.message)||String(e))})
+}
 /* 4. envoi vers GitHub */
 function first(){return !pub.rev&&!meta.rev}
 function cfg(){try{return JSON.parse(rg.call(ls,GK)||'null')}catch(e){return null}}
 function ready(){var c=cfg();return !!(c&&c.repo&&c.token)}
 var Q=Promise.resolve(),busy=0,timer,st='ok',stMsg='';
 function enq(fn){busy++;setSt('run');Q=Q.then(fn).then(function(){busy--;if(!busy)setSt(meta.dirty?'dirty':'ok')},function(e){busy--;setSt('err',(e&&e.message)||String(e))});return Q}
-function sched(){clearTimeout(timer);if(!admin)return;if(first()){setSt('first');return}if(!ready()){setSt('cfg');return}setSt('dirty');timer=setTimeout(function(){enq(pushKV)},4000)}
+function sched(){clearTimeout(timer);if(!admin)return;if(first()){setSt('first');return}if(!ready()){setSt('cfg');return}setSt('dirty');timer=setTimeout(function(){updUse();enq(pushKV)},4000)}
 function touch(){meta.dirty=true;ver++;saveMeta();sched()}
 function gh(method,path,body){var c=cfg();
  var u='https://api.github.com/repos/'+c.repo+'/contents/'+path.split('/').map(encodeURIComponent).join('/')+(method==='GET'?'?ref='+encodeURIComponent(c.branch||'main')+'&t='+Date.now():'');
@@ -94,8 +159,8 @@ function uploadBlob(k){return idbGet(k).then(function(v){
  setSt('run','Fichier '+k);
  return b64(v).then(function(c){return put(BL+k,c,'Fichier '+k)}).then(function(){
   meta.blobs[k]={t:(v instanceof Blob)?'blob':'ab',m:v.type||''};delete meta.up[k];meta.dirty=true;ver++;saveMeta();sched()})})}
-function pushKV(){var v0=ver,kv={};
- for(var i=0;i<ls.length;i++){var k=ls.key(i);if(isSync(k))kv[k]=rg.call(ls,k)}
+function pushKV(){if(!gateDone)return Promise.reject(new Error('Chargement des données en cours'));var v0=ver,kv={};
+ kkeys().forEach(function(k){kv[k]=kget(k)});
  var rev=Date.now();
  return put(DATA,u8(JSON.stringify({v:1,rev:rev,kv:kv,blobs:meta.blobs})),'Mise à jour du site (auto)').then(function(){meta.rev=rev;if(ver===v0)meta.dirty=false;saveMeta()})}
 function pushAll(){return idbKeys().then(function(ks){
@@ -105,11 +170,11 @@ function resume(){if(!admin||!ready())return;
  Object.keys(meta.up).forEach(function(k){enq(function(){return uploadBlob(k)})});
  Object.keys(meta.del).forEach(function(k){enq(function(){return delRemote(k)})});
  if(meta.dirty&&!first())enq(pushKV)}
-window.addEventListener('beforeunload',function(e){if(busy){e.preventDefault();e.returnValue=''}});
+window.addEventListener('beforeunload',function(e){if(busy||inflight>0){e.preventDefault();e.returnValue=''}});
 /* 5. interface admin */
 var L={ok:'Synchro OK',run:'Envoi…',dirty:'En attente',err:'Erreur',cfg:'À configurer',first:'Premier envoi'},C={ok:'#4c4',run:'#fb3',dirty:'#fb3',err:'#f55',cfg:'#999',first:'#6af'};
 var pill,pm,pst;
-function setSt(s,m){st=s;stMsg=m||'';if(!pill)return;pill.innerHTML='<i style="color:'+C[s]+'">●</i> Synchro GitHub · '+L[s];pill.title=stMsg;if(pst)pst.textContent=(m||'')||L[s]}
+function setSt(s,m){st=s;stMsg=m||'';if(!pill)return;pill.innerHTML='<i style="color:'+C[s]+'">●</i> Synchro GitHub · '+L[s]+(usePct>=85?' · stockage '+usePct+' %':'');pill.title=stMsg;if(pst)pst.textContent=(m||'')||L[s]}
 function initUI(){
  if(!admin||pill)return;
  var s=document.createElement('style');
@@ -117,23 +182,55 @@ function initUI(){
  document.head.appendChild(s);
  pill=document.createElement('button');pill.id='psb';pill.type='button';document.body.appendChild(pill);
  pm=document.createElement('div');pm.id='psm';pm.hidden=true;
- pm.innerHTML='<div><b>Synchro GitHub</b><input id="psr" placeholder="Dépôt (ex : alexis/portfolio)" autocomplete="off"><input id="psbr" placeholder="Branche (main)" autocomplete="off"><input id="pst" type="password" placeholder="Jeton d’accès GitHub" autocomplete="off"><small>Jeton : GitHub → Settings → Developer settings → Fine-grained tokens, limité à ce dépôt, permission « Contents : Read and write ». Il reste uniquement dans ce navigateur.</small><button id="pss" type="button">Enregistrer</button><button id="psa" type="button">Tout publier maintenant</button><button id="psc" type="button" style="background:#334">Fermer</button><small id="psx"></small></div>';
+ pm.innerHTML='<div><b>Synchro GitHub</b><input id="psr" placeholder="Dépôt (ex : alexis/portfolio)" autocomplete="off"><input id="psbr" placeholder="Branche (main)" autocomplete="off"><input id="pst" type="password" placeholder="Jeton d’accès GitHub" autocomplete="off"><small>Jeton : GitHub → Settings → Developer settings → Fine-grained tokens, limité à ce dépôt, permission « Contents : Read and write ». Il reste uniquement dans ce navigateur.</small><button id="pss" type="button">Enregistrer</button><small id="psu"></small><button id="pso" type="button">Optimiser les images</button><button id="psk" type="button" style="background:#334">Télécharger une sauvegarde</button><button id="psa" type="button">Tout publier maintenant</button><button id="psc" type="button" style="background:#334">Fermer</button><small id="psx"></small></div>';
  document.body.appendChild(pm);
- pst=pm.querySelector('#psx');
+ pst=pm.querySelector('#psx');setTimeout(updUse,300);
  var c=cfg()||{};pm.querySelector('#psr').value=c.repo||'';pm.querySelector('#psbr').value=c.branch||'main';pm.querySelector('#pst').value=c.token||'';
- pill.onclick=function(){pm.hidden=false};
- pm.querySelector('#psc').onclick=function(){pm.hidden=true};
+ pill.onclick=function(){pm.hidden=false;updUse()};
+ pm.querySelector('#psc').onclick=function(){pm.hidden=true};pm.querySelector('#pso').onclick=optimize;pm.querySelector('#psk').onclick=backup;
  function save(){var o={repo:pm.querySelector('#psr').value.trim().replace(/^https?:\/\/github\.com\//,'').replace(/\.git$/,'').replace(/\/$/,''),branch:pm.querySelector('#psbr').value.trim()||'main',token:pm.querySelector('#pst').value.trim()};try{rs.call(ls,GK,JSON.stringify(o))}catch(e){}return o}
  pm.querySelector('#pss').onclick=function(){save();if(ready()){setSt(meta.dirty?'dirty':'ok','Enregistré.');resume()}else setSt('cfg','Dépôt et jeton requis.')};
  pm.querySelector('#psa').onclick=function(){save();if(!ready()){setSt('cfg','Dépôt et jeton requis.');return}enq(pushAll)};
  if(!ready())setSt('cfg');else if(first())setSt('first','Clique sur « Tout publier maintenant » pour le premier envoi.');else{setSt(meta.dirty?'dirty':'ok');resume()}
 }
-document.addEventListener('DOMContentLoaded',initUI);
 function goAdmin(){admin=true;if(!meta.rev)meta.dirty=true;saveMeta();if(document.readyState!=='loading')initUI()}
-try{var tvm0=localStorage.getItem('portfolio-tvm');if(tvm0!==null&&tvm0!=='')document.documentElement.style.setProperty('--tvm',(+tvm0)+'px')}catch(e){}
+function applyTvm(){try{var tvm0=localStorage.getItem('portfolio-tvm');if(tvm0!==null&&tvm0!=='')document.documentElement.style.setProperty('--tvm',(+tvm0)+'px')}catch(e){}}
+/* 6. IndexedDB (localForage) : chargement, migration depuis localStorage, démarrage du site */
+function loadLib(){return new Promise(function(ok){if(window.localforage)return ok();var sc=document.createElement('script'),d=false,f=function(){if(!d){d=true;ok()}};
+ sc.src='https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js';sc.onload=f;sc.onerror=f;(document.head||document.documentElement).appendChild(sc);setTimeout(f,5000)})}
+function mkLFX(){
+ if(window.localforage){var L=window.localforage.createInstance({name:'portfolio-kv',storeName:'kv'});
+  return {lib:'localForage',all:function(){var o={};return L.iterate(function(v,k){o[k]=v}).then(function(){return o})},set:function(k,v){return L.setItem(k,v)},del:function(k){return L.removeItem(k)},get:function(k){return L.getItem(k)}}}
+ /* secours si la bibliothèque n’a pas pu être chargée : même base et même magasin, directement en IndexedDB */
+ var P=new Promise(function(ok,ko){var q=indexedDB.open('portfolio-kv',1);q.onupgradeneeded=function(){q.result.createObjectStore('kv')};q.onsuccess=function(){ok(q.result)};q.onerror=function(){ko(q.error)}});
+ function tx(m,fn){return P.then(function(d){return new Promise(function(ok,ko){var t=d.transaction('kv',m),r=fn(t.objectStore('kv'));t.oncomplete=function(){ok(r&&r.result)};t.onerror=t.onabort=function(){ko(t.error||(r&&r.error))}})})}
+ return {lib:'IndexedDB',
+  all:function(){return P.then(function(d){return new Promise(function(ok,ko){var t=d.transaction('kv','readonly'),st=t.objectStore('kv'),ks=st.getAllKeys(),vs=st.getAll();t.oncomplete=function(){var o={};ks.result.forEach(function(k,i){o[k]=vs.result[i]});ok(o)};t.onerror=t.onabort=function(){ko(t.error)}})})},
+  set:function(k,v){return tx('readwrite',function(st){return st.put(v,k)})},del:function(k){return tx('readwrite',function(st){return st['delete'](k)})},get:function(k){return tx('readonly',function(st){return st.get(k)})}}}
+function hydrate(){return loadLib().then(function(){LFX=mkLFX();return LFX.all()}).then(function(o){
+ var cur=o||{},leg=[],i,k;
+ for(i=0;i<ls.length;i++){k=ls.key(i);if(isSync(k))leg.push(k)}
+ var todo=leg.filter(function(k){return !HAS.call(cur,k)});
+ todo.forEach(function(k){cur[k]=rg.call(ls,k)});
+ /* migration : on copie l’ancien stockage dans IndexedDB, on vérifie la copie, puis seulement on libère localStorage */
+ return Promise.all(todo.map(function(k){return LFX.set(k,cur[k])})).then(function(){
+  return Promise.all(leg.map(function(k){return LFX.get(k).then(function(v){if(v===cur[k]&&v===rg.call(ls,k))rr.call(ls,k)})}))
+ }).then(function(){store=cur;try{rs.call(ls,'portfolio-idb1','1')}catch(e){}})})}
+var domReady=new Promise(function(ok){if(document.readyState!=='loading')ok();else document.addEventListener('DOMContentLoaded',function(){ok()})});
+var hydrated=admin?hydrate().then(function(){idb=true},function(e){idb=false;store={};idbErr=(e&&e.message)||String(e)}):Promise.resolve();
+function runBoot(){
+ var ss=[].slice.call(document.querySelectorAll('script[type="text/plain"][data-boot]')),q=[];
+ document.addEventListener=function(t,f,o){if(t==='DOMContentLoaded'&&document.readyState!=='loading'){q.push(f);return}return EventTarget.prototype.addEventListener.call(this,t,f,o)};
+ try{ss.forEach(function(sc){var n=document.createElement('script');n.text=sc.textContent;sc.parentNode.insertBefore(n,sc.nextSibling)})}finally{delete document.addEventListener}
+ q.forEach(function(f){setTimeout(function(){try{f.call(document,new Event('DOMContentLoaded'))}catch(e){console.error(e)}},0)})}
+Promise.all([domReady,hydrated]).then(function(){
+ if(admin)adminInit();
+ gateDone=true;initUI();applyTvm();
+ if(idbErr)toast('⚠ IndexedDB indisponible ('+idbErr+') : le site utilise le stockage classique du navigateur, limité à 5 Mo.');
+}).catch(function(e){console.error(e)}).then(runBoot);
 })();
 </script>
-<script>
+<script type="text/plain" data-boot>
 /* Mosaïque à rotation aléatoire : fabrique une grande image où chaque tuile a sa propre rotation */
 window.__rot=(function(){
   var cache={},order=[],last=new Map(),imgs={};
@@ -192,7 +289,7 @@ window.__rot=(function(){
   return{get:get};
 })();
 </script>
-<script>
+<script type="text/plain" data-boot>
 /* Fond « tunnel » : l'image est répétée vers le fond, de plus en plus petite, avec un trou au centre pour voir la suivante */
 window.__mkTunnel=function(kind){
   var cv=null,cx=null,tc=null,tx=null,im=null,src='',P=null,raf=0,tmr=0,host=null,dpr=1,W=0,H=0,sx=0,sy=0,sw=0,sh=0,t0=0;
@@ -289,7 +386,7 @@ window.__mkTunnel=function(kind){
 window.__tunnel=window.__mkTunnel('page');
 window.__tunnelIntro=window.__mkTunnel('intro');
 </script>
-<script>
+<script type="text/plain" data-boot>
 /* Module « Visualiseur musique » : animation façon MilkDrop qui réagit à la radio du site */
 (function(){
   var st=document.createElement('style');
@@ -1482,7 +1579,7 @@ body.ied #intro{cursor:default}
 <section id="radiopg"></section>
 </main>
 </div>
-<script>
+<script type="text/plain" data-boot>
 (function(){
  ['accueil','jeux','dessins','trois-d','apropos','contact'].forEach(function(id){var s=document.getElementById(id);if(s)s.innerHTML=''});
  try{
@@ -1514,7 +1611,7 @@ body.ied #intro{cursor:default}
 </script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/loaders/GLTFLoader.js"></script>
-<script>
+<script type="text/plain" data-boot>
 (function(){
  var REF=(function(){try{var r=JSON.parse(localStorage.getItem('portfolio-ref')||'null');return (r&&typeof r==='object')?r:{l:0,g:0}}catch(x){return {l:0,g:0}}})(),TP={u:(function(){try{return localStorage.getItem('portfolio-tpick')||''}catch(x){return ''}})()},IS=document.getElementById('istage'),IBG={u:''},HB={},CM={c:{},t:0,sql:['create table if not exists comments (','  id bigint generated always as identity primary key,','  created_at timestamptz not null default now(),','  mid text not null,','  pseudo text not null check (char_length(pseudo) between 1 and 24),','  body text not null check (char_length(body) between 1 and 300)',');','alter table comments enable row level security;','create policy "lire" on comments for select to anon using (true);','create policy "ecrire" on comments for insert to anon with check (true);','grant select, insert on comments to anon;','create index if not exists comments_mid_idx on comments (mid, created_at desc);'].join('\n')},
  secs=document.querySelectorAll('main section'),btns=document.querySelectorAll('nav button');
@@ -3450,7 +3547,7 @@ body.ied #intro{cursor:default}
 @keyframes mascotBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
 @media (prefers-reduced-motion:reduce){#mascot .mi{animation:none}}
 </style>
-<script>
+<script type="text/plain" data-boot>
 (function(){
   /* ===== RÉGLAGES DE LA MASCOTTE ===== */
   var CFG={
@@ -3752,7 +3849,7 @@ body.ied #intro{cursor:default}
   later(show,3000+Math.random()*4000);
 })();
 </script>
-<script>
+<script type="text/plain" data-boot>
 (function(){
   var g=function(i){return document.getElementById(i)};
   var KEY='portfolio-gfont',LK='portfolio-fontlist';
