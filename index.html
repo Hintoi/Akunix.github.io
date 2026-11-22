@@ -834,27 +834,22 @@ body:not(.ed) .mgh-bounce:hover :is(img,video){animation:hvb .6s ease-in-out inf
 #rname{max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .mod.fzm{display:flex;flex-direction:column;background:linear-gradient(#141b2d,#0b0f1a);color:#cfe;border:2px solid #566073}
 .fzm .mt:empty,.fzm .mbd:empty{display:none}
-.fz{display:flex;flex-direction:column;gap:12px;width:100%}
-.fzd{display:flex;align-items:baseline;justify-content:center;gap:10px;font-family:monospace}
-.fzf{font-size:calc(clamp(2.6rem,9vw,4.6rem)*var(--fzs,1));font-weight:800;line-height:1;color:#6f8a80;text-shadow:none;font-variant-numeric:tabular-nums}
-.fz.on .fzf{color:var(--fzc1,#99ffee);text-shadow:0 0 14px var(--fzc1,#33ffcc)}
-.fzd small{font-size:calc(1.2rem*var(--fzs,1));opacity:.7}
-.fzn{text-align:center;font-size:1rem;min-height:1.4em;opacity:.85}
-.fzs{position:relative;padding:18px 0 4px}
-.fzk{position:absolute;left:14px;right:14px;top:0;height:18px}
-.fzk i{position:absolute;top:0;width:10px;height:18px;margin-left:-5px;cursor:pointer;background:linear-gradient(var(--fzc1,#99ffee),var(--fzc1,#99ffee)) center/2px 100% no-repeat}
-.fzk i:hover{background:linear-gradient(#fff,#fff) center/4px 100% no-repeat}
-.fzr{-webkit-appearance:none;appearance:none;width:100%;height:14px;border-radius:7px;background:rgba(255,255,255,.14);outline:none;cursor:pointer;margin:0;display:block}
-.fzr::-webkit-slider-thumb{-webkit-appearance:none;box-sizing:border-box;width:28px;height:40px;border-radius:8px;background:var(--fzc2,#ff5d73);border:2px solid #fff;cursor:grab}
-.fzr::-moz-range-thumb{box-sizing:border-box;width:28px;height:40px;border-radius:8px;background:var(--fzc2,#ff5d73);border:2px solid #fff;cursor:grab}
-.fzb{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
-.fzb button{all:unset;cursor:pointer;min-width:54px;padding:10px 14px;text-align:center;font:700 1.4rem/1 monospace;color:#fff;background:var(--fzc3,#1d2740);border:2px solid rgba(255,255,255,.35);border-radius:10px}
+.fz{font-size:calc(15px*var(--fzu,1));display:flex;flex-direction:column;gap:.7em;width:100%}
+.fzd{display:flex;align-items:baseline;justify-content:center;gap:.4em;font-family:monospace}
+.fzf{font-size:calc(3em*var(--fzs,1));font-weight:800;line-height:1;color:#6f8a80;text-shadow:none;font-variant-numeric:tabular-nums}
+.fz.on .fzf{color:var(--fzc1,#99ffee);text-shadow:0 0 .3em var(--fzc1,#33ffcc)}
+.fzd small{font-size:calc(1em*var(--fzs,1));opacity:.7}
+.fzn{text-align:center;font-size:1em;min-height:1.4em;opacity:.85}
+.fzs{padding:.3em 0}
+.fzr{-webkit-appearance:none;appearance:none;width:100%;height:.6em;border-radius:.3em;background:rgba(255,255,255,.14);outline:none;cursor:pointer;margin:0;display:block}
+.fzr::-webkit-slider-thumb{-webkit-appearance:none;box-sizing:border-box;width:1.3em;height:1.9em;border-radius:.4em;background:var(--fzc2,#ff5d73);border:2px solid #fff;cursor:grab}
+.fzr::-moz-range-thumb{box-sizing:border-box;width:1.3em;height:1.9em;border-radius:.4em;background:var(--fzc2,#ff5d73);border:2px solid #fff;cursor:grab}
+.fzb{display:flex;gap:.5em;justify-content:center;flex-wrap:wrap}
+.fzb button{all:unset;cursor:pointer;min-width:2.6em;padding:.45em .65em;text-align:center;font:700 1.1em/1 monospace;color:#fff;background:var(--fzc3,#1d2740);border:2px solid rgba(255,255,255,.35);border-radius:.5em}
 .fzb button:hover{filter:brightness(1.35)}
-.fzb .fzy{background:var(--fzc2,#ff5d73);border-color:#fff;min-width:70px}
+.fzb .fzy{background:var(--fzc2,#ff5d73);border-color:#fff;min-width:3.2em}
 .fzb button:focus-visible{outline:2px solid #fff}
 .fz.fzhn .fzn{display:none}
-.fz.fzhk .fzk{display:none}
-.fz.fzhk .fzs{padding-top:4px}
 .fz.fzhb .fzb{display:none}
 .editing .fzm .fz{pointer-events:none}
 @media (max-width:760px){#radio{flex-wrap:wrap;max-width:calc(100vw - 20px)}}
@@ -1323,7 +1318,7 @@ body.ied #intro{cursor:default}
    <label class="row">Radio : taille des chiffres <input type="range" id="fzsz" min="50" max="200" step="5" value="100"></label>
    <label class="row">Radio : unité affichée <input id="fzun" maxlength="6" value="FM" style="width:70px"></label>
    <label class="row">Afficher le nom de la musique <input type="checkbox" id="fznm"></label>
-   <label class="row">Afficher les traits des stations <input type="checkbox" id="fzkt"></label>
+   <label class="row">Radio : taille du cadran (%) <input type="range" id="fzz" min="40" max="200" step="5" value="100"></label>
    <label class="row">Afficher les boutons (◂◂ − + ▸▸ et lecture) <input type="checkbox" id="fzbt"></label>
    <button class="btn ghost" id="fzrs" type="button">Réinitialiser le style de la radio</button>
   </div>
@@ -3248,13 +3243,13 @@ body.ied #intro{cursor:default}
  tpCur();
  /* module « Fréquence radio » : grand cadran pour régler la radio (uniquement sur la page Radio). Les éléments sont rangés dans window.__fzEls et tout reste inactif tant que la radio n'est pas prête (window.__fzReady) */
  function fzStyle(e,o){var s=e.style,P=function(n,v){if(v)s.setProperty(n,v);else s.removeProperty(n)};
-  P('--fzc1',o.fzc1);P('--fzc2',o.fzc2);P('--fzc3',o.fzc3);P('--fzs',o.fzs?String(o.fzs/100):'');
+  P('--fzc1',o.fzc1);P('--fzc2',o.fzc2);P('--fzc3',o.fzc3);P('--fzs',o.fzs?String(o.fzs/100):'');P('--fzu',o.fzz?String(o.fzz/100):'');
   var w=e.querySelector('.fz');if(!w)return;
-  w.classList.toggle('fzhn',!!o.fzhn);w.classList.toggle('fzhk',!!o.fzhk);w.classList.toggle('fzhb',!!o.fzhb);
+  w.classList.toggle('fzhn',!!o.fzhn);w.classList.toggle('fzhb',!!o.fzhb);
   var u=w.querySelector('.fzd small');if(u)u.textContent=o.fzu==null?'FM':o.fzu}
  function fzSync(o){var f=!!o.fz;$('fzset').hidden=!f;if(!f)return;
   $('fzc1').value=o.fzc1||'#99ffee';$('fzc2').value=o.fzc2||'#ff5d73';$('fzc3').value=o.fzc3||'#1d2740';$('fzsz').value=o.fzs||100;$('fzun').value=o.fzu==null?'FM':o.fzu;
-  $('fznm').checked=!o.fzhn;$('fzkt').checked=!o.fzhk;$('fzbt').checked=!o.fzhb}
+  $('fznm').checked=!o.fzhn;$('fzbt').checked=!o.fzhb;$('fzz').value=o.fzz||100}
  function fzSet(fn){var o=get(sel);if(!o||!o.fz)return;fn(o);var e=el();if(e)fzStyle(e,o);save()}
  function fzInit(){
   $('fzc1').oninput=function(){var v=this.value;fzSet(function(o){o.fzc1=v})};
@@ -3263,28 +3258,28 @@ body.ied #intro{cursor:default}
   $('fzsz').oninput=function(){var v=+this.value;fzSet(function(o){o.fzs=v===100?0:v})};
   $('fzun').oninput=function(){var v=this.value;fzSet(function(o){o.fzu=v})};
   $('fznm').onchange=function(){var v=this.checked;fzSet(function(o){o.fzhn=!v})};
-  $('fzkt').onchange=function(){var v=this.checked;fzSet(function(o){o.fzhk=!v})};
+  $('fzz').oninput=function(){var v=+this.value;fzSet(function(o){o.fzz=v===100?0:v})};
   $('fzbt').onchange=function(){var v=this.checked;fzSet(function(o){o.fzhb=!v})};
-  $('fzrs').onclick=function(){fzSet(function(o){['fzc1','fzc2','fzc3','fzs','fzu','fzhn','fzhk','fzhb'].forEach(function(k){delete o[k]})});var o=get(sel);if(o)fzSync(o)}}
+  $('fzrs').onclick=function(){fzSet(function(o){['fzc1','fzc2','fzc3','fzs','fzu','fzhn','fzhb','fzz'].forEach(function(k){delete o[k]})});var o=get(sel);if(o)fzSync(o)}}
  function fzBuild(e,o){
   e.classList.add('fzm','cmt');
   
   var w=document.createElement('div');w.className='fz';
-  w.innerHTML='<div class="fzd"><span class="fzf">100.0</span><small>FM</small></div><div class="fzn"></div><div class="fzs"><div class="fzk"></div><input type="range" class="fzr" min="87.5" max="108" step="0.1" aria-label="Fréquence"></div><div class="fzb"><button type="button" data-a="ps" aria-label="Station précédente" title="Station précédente">◂◂</button><button type="button" data-a="m" aria-label="Fréquence moins" title="-0,1">−</button><button type="button" class="fzy" data-a="pl" aria-label="Lecture / pause">▶</button><button type="button" data-a="p" aria-label="Fréquence plus" title="+0,1">+</button><button type="button" data-a="ns" aria-label="Station suivante" title="Station suivante">▸▸</button></div>';
+  w.innerHTML='<div class="fzd"><span class="fzf">100.0</span><small>FM</small></div><div class="fzn"></div><div class="fzs"><input type="range" class="fzr" min="87.5" max="108" step="0.1" aria-label="Fréquence"></div><div class="fzb"><button type="button" data-a="ps" aria-label="Station précédente" title="Station précédente">◂◂</button><button type="button" data-a="m" aria-label="Fréquence moins" title="-0,1">−</button><button type="button" class="fzy" data-a="pl" aria-label="Lecture / pause">▶</button><button type="button" data-a="p" aria-label="Fréquence plus" title="+0,1">+</button><button type="button" data-a="ns" aria-label="Station suivante" title="Station suivante">▸▸</button></div>';
   e.appendChild(w);
-  fzStyle(e,o);var r=w.querySelector('.fzr'),k=w.querySelector('.fzk');
+  fzStyle(e,o);var r=w.querySelector('.fzr');
   r.addEventListener('pointerdown',function(){r._d=1});
   ['pointerup','pointercancel','change','blur'].forEach(function(n){r.addEventListener(n,function(){r._d=0})});
   r.oninput=function(){var v=Math.round(+this.value*10)/10;w.querySelector('.fzf').textContent=v.toFixed(1);if(!window.__fzReady)return;clearTimeout(rTm);rTm=setTimeout(function(){rTune(v,true,true)},90)};
-  k.onclick=function(ev){var t=ev.target.closest&&ev.target.closest('i');if(t&&window.__fzReady)rTune(+t.dataset.f,true,true)};
+  
   w.onclick=function(ev){var b=ev.target.closest&&ev.target.closest('button');if(!b||!window.__fzReady)return;var a=b.dataset.a;if(a==='ps')rSeek(-1);else if(a==='ns')rSeek(1);else if(a==='m')rTune(rFq-.1,true,true);else if(a==='p')rTune(rFq+.1,true,true);else if(a==='pl')$('rplay').click()};
   (window.__fzEls=window.__fzEls||[]).push(e);setTimeout(fzUpd,0)}
  function fzUpd(){
   if(!window.__fzReady)return;
   var E=window.__fzEls=(window.__fzEls||[]).filter(function(e){return document.body.contains(e)});
   if(!E.length)return;
-  var st=[],on=rNear()!==null,L=rLst(),pl=!au.paused,nm=$('rname').textContent;
-  tk.forEach(function(t){var f=Math.round((t.fq||100)*10)/10;if(st.indexOf(f)<0)st.push(f)});
+  var on=rNear()!==null,L=rLst(),pl=!au.paused,nm=$('rname').textContent;
+  
   E.forEach(function(e){
    var w=e.querySelector('.fz');if(!w)return;
    w.querySelector('.fzf').textContent=rFq.toFixed(1);
@@ -3292,7 +3287,7 @@ body.ied #intro{cursor:default}
    w.querySelector('.fzn').textContent=!tk.length?'Aucune musique pour l’instant':on?nm+(L.length>1?'  ·  '+L.length+' musiques':''):'Pas de signal — friture';
    w.classList.toggle('on',on);
    w.querySelector('.fzy').textContent=pl?'⏸':'▶';
-   var k=w.querySelector('.fzk'),h='';st.forEach(function(f){h+='<i style="left:'+((f-87.5)/20.5*100)+'%" data-f="'+f+'" title="'+f.toFixed(1)+' FM"></i>'});if(k._h!==h){k.innerHTML=h;k._h=h}
+   
   })}
  function tpBuild(e,o){
   e.classList.add('tpk','cmt');e.style.setProperty('--tz',(o.tz||34)+'px');
