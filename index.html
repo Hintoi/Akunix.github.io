@@ -15,11 +15,11 @@ var rg=SP.getItem,rs=SP.setItem,rr=SP.removeItem;
 function isSync(k){return typeof k==='string'&&k.indexOf('portfolio-')===0&&!LOCAL[k]}
 function rl(){location.reload()}
 /* stockage des données du site : IndexedDB (via localForage) pour l’admin, copie en mémoire lue de façon synchrone par le site */
-var idb=false,store={},LFX=null,inflight=0,gateDone=false,idbErr='',HAS=Object.prototype.hasOwnProperty;
-function kkeys(){var a=[],i,k;if(idb){for(k in store)if(HAS.call(store,k)&&isSync(k))a.push(k)}else for(i=0;i<ls.length;i++){k=ls.key(i);if(isSync(k))a.push(k)}return a}
-function kget(k){return idb?(HAS.call(store,k)?store[k]:null):rg.call(ls,k)}
-function kset(k,v){v=String(v);if(idb){store[k]=v;persist(k)}else rs.call(ls,k,v)}
-function kdel(k){if(idb){delete store[k];persist(k)}else rr.call(ls,k)}
+var useIdb=false,store={},LFX=null,inflight=0,gateDone=false,idbErr='',HAS=Object.prototype.hasOwnProperty;
+function kkeys(){var a=[],i,k;if(useIdb){for(k in store)if(HAS.call(store,k)&&isSync(k))a.push(k)}else for(i=0;i<ls.length;i++){k=ls.key(i);if(isSync(k))a.push(k)}return a}
+function kget(k){return useIdb?(HAS.call(store,k)?store[k]:null):rg.call(ls,k)}
+function kset(k,v){v=String(v);if(useIdb){store[k]=v;persist(k)}else rs.call(ls,k,v)}
+function kdel(k){if(useIdb){delete store[k];persist(k)}else rr.call(ls,k)}
 function persist(k){var v=HAS.call(store,k)?store[k]:undefined;inflight++;
  var p=(v===undefined)?LFX.del(k):LFX.set(k,v);
  p.then(function(){inflight--},function(e){inflight--;warnWrite(k,e)})}
@@ -44,13 +44,13 @@ function adminInit(){
  saveMeta();
 }
 /* 2. interception du stockage */
-SP.getItem=function(k){if(this===ls&&idb&&isSync(k))return HAS.call(store,k)?store[k]:null;
+SP.getItem=function(k){if(this===ls&&useIdb&&isSync(k))return HAS.call(store,k)?store[k]:null;
  if(this===ls&&!admin&&pub.rev>0){
   if(k==='portfolio-reset1'||k==='portfolio-reset2'||k==='portfolio-galaxy1'||k==='portfolio-anchor2'||k==='portfolio-demo1')return '1';
   if(isSync(k))return Object.prototype.hasOwnProperty.call(mem,k)?mem[k]:null;
  }
  return rg.apply(this,arguments)};
-SP.setItem=function(k,v){if(this===ls&&idb&&isSync(k)){v=String(v);if(HAS.call(store,k)&&store[k]===v)return;store[k]=v;persist(k);touch();return}
+SP.setItem=function(k,v){if(this===ls&&useIdb&&isSync(k)){v=String(v);if(HAS.call(store,k)&&store[k]===v)return;store[k]=v;persist(k);touch();return}
  if(this===ls){
   if(k===AK){rs.apply(this,arguments);if(!admin){if(pub.rev>0)setTimeout(rl,60);else goAdmin()}return}
   if(isSync(k)){
@@ -59,7 +59,7 @@ SP.setItem=function(k,v){if(this===ls&&idb&&isSync(k)){v=String(v);if(HAS.call(s
    try{rs.apply(this,arguments)}catch(e){warnFull(k,e);throw e}touch();return}
  }
  return rs.apply(this,arguments)};
-SP.removeItem=function(k){if(this===ls&&idb&&isSync(k)){if(!HAS.call(store,k))return;delete store[k];persist(k);touch();return}
+SP.removeItem=function(k){if(this===ls&&useIdb&&isSync(k)){if(!HAS.call(store,k))return;delete store[k];persist(k);touch();return}
  if(this===ls){
   if(k===AK){var w=admin;rr.apply(this,arguments);if(w){if(pub.rev>0)setTimeout(rl,60);else admin=false}return}
   if(isSync(k)){
@@ -82,7 +82,7 @@ var CAP=5242880,usePct=0,lastWarn=0;
 function usage(){var t=0,i,k;kkeys().forEach(function(k){t+=k.length+(kget(k)||'').length});for(i=0;i<ls.length;i++){k=ls.key(i);if(!isSync(k))t+=k.length+(rg.call(ls,k)||'').length}return t}
 function fmtM(n){return (n/1e6).toFixed(2).replace('.',',')}
 function updUse(){var t=usage(),u=document.getElementById('psu');
- if(idb){usePct=0;if(u){u.textContent='Stockage : IndexedDB, '+fmtM(t)+' M de caractères (plus de limite de 5 Mo)';u.style.color=''}
+ if(useIdb){usePct=0;if(u){u.textContent='Stockage : IndexedDB, '+fmtM(t)+' M de caractères (plus de limite de 5 Mo)';u.style.color=''}
   if(navigator.storage&&navigator.storage.estimate)navigator.storage.estimate().then(function(e){if(!e||!e.quota)return;var p=Math.round(e.usage/e.quota*100);usePct=p>=85?p:0;if(u)u.textContent+=' · '+p+' % de l’espace autorisé par le navigateur';if(pill)setSt(st,stMsg)}).catch(function(){});
   if(pill)setSt(st,stMsg);return}
  usePct=Math.round(t/CAP*100);
@@ -217,7 +217,7 @@ function hydrate(){return loadLib().then(function(){LFX=mkLFX();return LFX.all()
   return Promise.all(leg.map(function(k){return LFX.get(k).then(function(v){if(v===cur[k]&&v===rg.call(ls,k))rr.call(ls,k)})}))
  }).then(function(){store=cur;try{rs.call(ls,'portfolio-idb1','1')}catch(e){}})})}
 var domReady=new Promise(function(ok){if(document.readyState!=='loading')ok();else document.addEventListener('DOMContentLoaded',function(){ok()})});
-var hydrated=admin?hydrate().then(function(){idb=true},function(e){idb=false;store={};idbErr=(e&&e.message)||String(e)}):Promise.resolve();
+var hydrated=admin?hydrate().then(function(){useIdb=true},function(e){useIdb=false;store={};idbErr=(e&&e.message)||String(e)}):Promise.resolve();
 function runBoot(){
  var ss=[].slice.call(document.querySelectorAll('script[type="text/plain"][data-boot]')),q=[];
  document.addEventListener=function(t,f,o){if(t==='DOMContentLoaded'&&document.readyState!=='loading'){q.push(f);return}return EventTarget.prototype.addEventListener.call(this,t,f,o)};
