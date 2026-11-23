@@ -769,6 +769,7 @@ form{display:grid;gap:12px;max-width:480px}
 .dt{font-size:var(--s);line-height:var(--tl,1);font-family:var(--h);font-weight:800;color:var(--c,var(--ink));white-space:pre;text-align:var(--ta,inherit)}
 .dt.dtw{white-space:pre-wrap;width:var(--tw);overflow-wrap:break-word}
 .dt.dtn{font-family:var(--b);font-weight:400}
+.pgout.pgout.pgout{display:none!important}
 .deco img{width:var(--s);display:block;border-radius:8px}
 .deco.bnr{width:var(--bl,600px);display:flex;overflow:hidden;border-radius:8px}
 .deco.bnr img{flex:none}
@@ -888,7 +889,7 @@ body.ed .zone.zsel{outline:2px solid var(--pop)}
 #salle{--ink:#eef1fa;--muted:#9aa5bf;--panel:#0a0c14;--line:#2a3555}
 body:not(.veil-n) section#salle.on{background:rgba(10,12,20,.92)!important;color:#eef1fa}
 #rhint{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);font-size:.8rem;color:#fff;background:rgba(0,0,0,.45);padding:4px 10px;border-radius:99px;pointer-events:none;z-index:2;white-space:nowrap}
-#rtop{position:absolute;top:8px;right:8px;display:none;gap:8px;align-items:center;font-size:.8rem;color:#fff;z-index:2}
+#rtop{position:absolute;top:8px;left:8px;display:none;gap:8px;align-items:center;font-size:.8rem;color:#fff;z-index:2}
 body.ed #rtop{display:flex}
 .rb{cursor:pointer;background:var(--accent);color:#fff;padding:6px 12px;border-radius:8px;font-weight:600}
 #room button{all:unset;cursor:pointer;position:absolute;z-index:2;background:rgba(0,0,0,.55);color:#fff;padding:6px 12px;border-radius:8px}
@@ -908,7 +909,7 @@ body.ed #rtl{display:flex}
 #rback:not([hidden])~#rtabs{display:none!important}
 #rtabs button,#rtop button{position:static}
 #rtabs button.on{background:var(--accent)}
-#rtop{flex-wrap:wrap;justify-content:flex-end;max-width:52%}
+#rtop{flex-wrap:wrap;justify-content:flex-start;max-width:52%}
 #rtop input:not([type=file]):not([type=color]){padding:4px 6px;border-radius:6px;border:0;font:inherit}
 #rfade{position:absolute;inset:0;background:#000;opacity:0;pointer-events:none;transition:opacity .25s;z-index:3}
 #rfs{top:8px;right:8px;font-size:1.1rem}
@@ -1363,8 +1364,9 @@ body.ied #intro{cursor:default}
  <div class="sw" id="padds"></div>
  <p class="note" id="merr2" style="margin:0" hidden></p>
  <h2 style="font-size:1rem">Menu de gauche</h2>
- <p class="note" style="margin:0">Monte ou descends chaque raccourci avec ↑ et ↓, et coche ceux que tu veux afficher. Les petits boutons + et − du menu (en mode édition) marchent toujours.</p>
+ <p class="note" style="margin:0">Monte ou descends chaque raccourci avec ↑ et ↓, et coche ceux que tu veux afficher. La corbeille 🗑 retire une page du site (clique deux fois pour confirmer). Une page que tu as créée est supprimée avec ses décors ; une page d’origine (Jeux vidéo, Dessins, 3D, À propos, Contact…) est seulement retirée, avec ses décors conservés : tu peux la restaurer dans la liste « Pages retirées » juste en dessous. Les petits boutons + et − du menu (en mode édition) marchent toujours.</p>
  <div id="navlist"></div>
+ <div id="gonelist"></div>
  <h2 style="font-size:1rem">Fenêtres</h2>
  <button class="btn ghost" id="wadd" type="button">+ Nouvelle fenêtre</button>
  <label class="row" id="wsrow" hidden>Fenêtre <select id="wsel"></select></label>
@@ -1610,7 +1612,7 @@ body.ied #intro{cursor:default}
 (function(){
  var REF=(function(){try{var r=JSON.parse(localStorage.getItem('portfolio-ref')||'null');return (r&&typeof r==='object')?r:{l:0,g:0}}catch(x){return {l:0,g:0}}})(),TP={u:(function(){try{return localStorage.getItem('portfolio-tpick')||''}catch(x){return ''}})()},IS=document.getElementById('istage'),IBG={u:''},HB={},CM={c:{},t:0,sql:['create table if not exists comments (','  id bigint generated always as identity primary key,','  created_at timestamptz not null default now(),','  mid text not null,','  pseudo text not null check (char_length(pseudo) between 1 and 24),','  body text not null check (char_length(body) between 1 and 300)',');','alter table comments enable row level security;','create policy "lire" on comments for select to anon using (true);','create policy "ecrire" on comments for insert to anon with check (true);','grant select, insert on comments to anon;','create index if not exists comments_mid_idx on comments (mid, created_at desc);'].join('\n')},
  secs=document.querySelectorAll('main section'),btns=document.querySelectorAll('nav button');
- function go(p){if(String(p).slice(0,2)==='w:'){if(window.__ow)__ow(String(p).slice(2));return}if(!go.sk&&window.__tr&&p!==cur&&document.getElementById(p)&&__tr(p))return;secs=document.querySelectorAll('main section');btns=document.querySelectorAll('nav button');
+ function go(p){if(String(p).slice(0,2)==='w:'){if(window.__ow)__ow(String(p).slice(2));return}if(isGone(p))p='accueil';if(!go.sk&&window.__tr&&p!==cur&&document.getElementById(p)&&__tr(p))return;secs=document.querySelectorAll('main section');btns=document.querySelectorAll('nav button');
   if(!document.getElementById(p))p='accueil';
   secs.forEach(function(s){s.classList.toggle('on',s.id===p)});
   btns.forEach(function(b){if(b.dataset.p===p)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});
@@ -1760,8 +1762,24 @@ body.ied #intro{cursor:default}
   var nv=document.querySelector('nav');nv.insertBefore(b,nv.querySelector('.perso'));
   regT(s.firstChild,p.id+'h');regT(s.lastChild,p.id+'p');regT(b,'n'+p.id);
  }
- pgs.forEach(build);
- function pages(){return [].map.call(document.querySelectorAll('main section'),function(s){var b=document.querySelector('nav button[data-p="'+s.id+'"]'),h=s.querySelector('h1');return {id:s.id,name:((isCustom(s.id)?h:b)||h||b||{textContent:s.id}).textContent.trim()}})}
+ var PDK='portfolio-pagesdel',GONE=[];
+ try{GONE=JSON.parse(localStorage.getItem(PDK)||'[]')||[]}catch(x){GONE=[]}
+ function saveGone(){try{localStorage.setItem(PDK,JSON.stringify(GONE))}catch(x){}}
+ function isGone(p){return !!GONE&&GONE.indexOf(String(p))>=0}
+ function applyGone(){
+  [].forEach.call(document.querySelectorAll('[data-p]'),function(b){b.classList.toggle('pgout',isGone(b.dataset.p))});
+  [].forEach.call(document.querySelectorAll('main section'),function(s){s.classList.toggle('pgout',isGone(s.id))});
+  var c=document.querySelector('main section.on');if(c&&isGone(c.id))go('accueil')
+ }
+ function fillGone(){var c=$('gonelist');if(!c)return;c.innerHTML='';
+  if(GONE.length){var tt=document.createElement('p');tt.className='note';tt.style.cssText='margin:8px 0 2px;font-weight:700';tt.textContent='Pages retirées (restaurables)';c.appendChild(tt)}
+  GONE.slice().forEach(function(id){var b=document.querySelector('nav button[data-p="'+id+'"]'),l=document.createElement('div');l.className='row';l.style.gap='6px';
+   var sp=document.createElement('span');sp.textContent=b?navLabel(b):id;sp.style.flex='1';
+   var r=document.createElement('button');r.type='button';r.className='btn ghost';r.style.padding='2px 9px';r.textContent='Restaurer';
+   r.onclick=function(){GONE=GONE.filter(function(k){return k!==id});saveGone();applyGone();applyNav();fillNav();fillGone()};
+   l.appendChild(sp);l.appendChild(r);c.appendChild(l)})}
+ pgs.forEach(build);applyGone();
+ function pages(){return [].map.call(document.querySelectorAll('main section:not(.pgout)'),function(s){var b=document.querySelector('nav button[data-p="'+s.id+'"]'),h=s.querySelector('h1');return {id:s.id,name:((isCustom(s.id)?h:b)||h||b||{textContent:s.id}).textContent.trim()}})}
  function fillTo(v){var s=$('lto');s.innerHTML='';pages().forEach(function(p){var o=document.createElement('option');o.value=p.id;o.textContent=p.name;if(p.id===v)o.selected=true;s.appendChild(o)})}
  $('lto').onchange=function(){var o=get(sel);if(!o)return;o.to=this.value;save()};
  function newPage(){
@@ -1771,13 +1789,34 @@ body.ied #intro{cursor:default}
   go(p.id);
   say('Page créée. Un bouton qui y mène a été ajouté sur la page précédente. Pour l’ajouter au menu de gauche, clique sur le « + » à côté d’elle dans le menu.');
  }
- function updPD(){var b=$('pdel');if(!b)return;b.hidden=!isCustom(cur);b.textContent='Supprimer cette page';fillNav();applyTV();fillZ();roomCheck()}
+ function delPage(id){
+  if(!isCustom(id)){
+   var sec=document.getElementById(id);
+   if(id==='accueil'||!sec||sec.tagName!=='SECTION'||isGone(id))return;
+   GONE.push(id);saveGone();applyGone();
+   items.forEach(function(o){if(o.hl===id)delete o.hl});
+   items=items.filter(function(o){return !(o.k==='link'&&o.to===id)});save();
+   delete NV[id];try{localStorage.setItem(NK,JSON.stringify(NV))}catch(x){}
+   NO=NO.filter(function(k){return k!==id});saveNO();
+   pick(null);pickT(null);
+   if(cur===id)go('accueil');else render();
+   fillNav();fillGone();return
+  }
+  pgs=pgs.filter(function(p){return p.id!==id});savePg();
+  var s=$(id);if(s)s.remove();var nb=document.querySelector('nav button[data-p="'+id+'"]');if(nb)nb.remove();
+  items.forEach(function(o){if(o.hl===id)delete o.hl});
+  items=items.filter(function(o){return o.p!==id&&!(o.k==='link'&&o.to===id)});save();
+  delete NV[id];try{localStorage.setItem(NK,JSON.stringify(NV))}catch(x){}
+  NO=NO.filter(function(k){return k!==id});saveNO();
+  pick(null);pickT(null);
+  if(cur===id)go('accueil');else render();
+  fillNav()
+ }
+ function updPD(){var b=$('pdel');if(!b)return;b.hidden=cur==='accueil'||isGone(cur);b.textContent='Supprimer cette page';fillNav();fillGone();applyTV();fillZ();roomCheck()}
  $('pdel').onclick=function(){
   var b=this;
   if(!b.dataset.c){b.dataset.c='1';b.textContent='Confirmer la suppression ?';setTimeout(function(){delete b.dataset.c;b.textContent='Supprimer cette page'},3000);return}
-  delete b.dataset.c;var id=cur;pgs=pgs.filter(function(p){return p.id!==id});savePg();
-  var s=$(id);if(s)s.remove();var nb=document.querySelector('nav button[data-p="'+id+'"]');if(nb)nb.remove();
-  items.forEach(function(o){if(o.hl===id)delete o.hl});items=items.filter(function(o){return o.p!==id&&!(o.k==='link'&&o.to===id)});save();pick(null);pickT(null);go('accueil');
+  delete b.dataset.c;delPage(cur);
  };
  L.addEventListener('click',function(e){
   if(ed)return;var t=e.target.closest('.lnk,.hlk');if(!t)return;
@@ -1820,7 +1859,7 @@ body.ied #intro{cursor:default}
  try{NH=JSON.parse(localStorage.getItem(NOH)||'[]')||[]}catch(x){NH=[]}
  function navKey(b){return b.dataset.p||('act:'+b.dataset.act)}
  function navLabel(b){var t='';for(var i=0;i<b.childNodes.length;i++){var n=b.childNodes[i];if(n.nodeType===3)t+=n.nodeValue}return t.trim()||navKey(b)}
- function navBtns(){return [].slice.call(document.querySelector('nav').children).filter(function(b){return b.tagName==='BUTTON'})}
+ function navBtns(){return [].slice.call(document.querySelector('nav').children).filter(function(b){return b.tagName==='BUTTON'&&!b.classList.contains('pgout')})}
  function saveNO(){try{localStorage.setItem(NOK,JSON.stringify(NO));localStorage.setItem(NOH,JSON.stringify(NH))}catch(x){}}
  function applyNavOrder(){
   var nv=document.querySelector('nav');if(!nv)return;
@@ -1856,6 +1895,9 @@ body.ied #intro{cursor:default}
     l.appendChild(mk('↑','Monter',i===0,function(){navMove(b,-1)}));
     l.appendChild(mk('↓','Descendre',i===bs.length-1,function(){navMove(b,1)}));
     var k=b.dataset.p,act=b.dataset.act;
+    if(k&&k!=='accueil'){var dl=mk('🗑','Supprimer la page '+navLabel(b),false,function(){
+     if(!dl.dataset.c){dl.dataset.c='1';dl.textContent='Supprimer ?';dl.style.color='#f88';setTimeout(function(){if(dl.isConnected){delete dl.dataset.c;dl.textContent='🗑';dl.style.color=''}},3500);return}
+     delPage(k)});dl.title=isCustom(k)?'Supprimer cette page (avec ses décors)':'Retirer cette page du site (tu pourras la restaurer)';l.appendChild(dl)}
     if(k&&k!=='accueil'){
      var cb=document.createElement('input');cb.type='checkbox';cb.checked=navOn(k);cb.title='Afficher dans le menu';cb.onchange=function(){setNav(k,this.checked)};l.appendChild(cb);
     }else if(act&&act!=='pages'){
