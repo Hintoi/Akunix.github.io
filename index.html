@@ -892,6 +892,12 @@ body:not(.veil-n) section#salle.on{background:rgba(10,12,20,.92)!important;color
 #rtop{position:absolute;top:8px;left:8px;display:none;gap:8px;align-items:center;font-size:.8rem;color:#fff;z-index:2}
 body.ed #rtop{display:flex}
 .rb{cursor:pointer;background:var(--accent);color:#fff;padding:6px 12px;border-radius:8px;font-weight:600}
+#rsfp{flex-basis:100%;display:grid;gap:6px;background:rgba(10,14,24,.85);border-radius:10px;padding:8px 10px;font-size:.8rem;color:#fff;justify-content:start}
+#rsfp[hidden]{display:none}
+#rsfp .rsr{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+#rsfp .rsr b{min-width:60px}
+#rsfp .rsr [hidden]{display:none}
+#rsfp input[type=range]{width:100px}
 #room button{all:unset;cursor:pointer;position:absolute;z-index:2;background:rgba(0,0,0,.55);color:#fff;padding:6px 12px;border-radius:8px}
 #room button[hidden]{display:none}
 #rback{top:8px;left:8px}
@@ -1562,7 +1568,7 @@ body.ied #intro{cursor:default}
  <p class="lead">Bouge la souris pour regarder autour de toi, clique sur un cadre pour t’en approcher.</p>
  <div id="room">
   <div id="rhint">Clique pour capturer la souris et regarder partout · ZQSD ou flèches pour marcher · clique sur un cadre (viseur au centre) · Échap pour quitter</div>
-  <div id="rtop"><label class="rb">Ajouter des images<input type="file" id="rimgs" accept="image/*" multiple hidden></label><label class="rb">Ajouter un objet 3D (.glb)<input type="file" id="rglb" accept=".glb" multiple hidden></label><button id="radd" type="button">+ Pièce</button><input id="rnm" maxlength="16" aria-label="Nom de la pièce" style="width:90px"><button id="rrm" type="button">Supprimer la pièce</button><label class="rb">Importer une scène .glb<input type="file" id="rscn" accept=".glb" hidden></label><button id="rscr" type="button" hidden>Retirer la scène</button><label>Murs <input type="color" id="rwall" value="#e8e2d6"></label><label>Sol <input type="color" id="rfloor" value="#8a6b4a"></label></div>
+  <div id="rtop"><label class="rb">Ajouter des images<input type="file" id="rimgs" accept="image/*" multiple hidden></label><label class="rb">Ajouter un objet 3D (.glb)<input type="file" id="rglb" accept=".glb" multiple hidden></label><button id="radd" type="button">+ Pièce</button><input id="rnm" maxlength="16" aria-label="Nom de la pièce" style="width:90px"><button id="rrm" type="button">Supprimer la pièce</button><label class="rb">Importer une scène .glb<input type="file" id="rscn" accept=".glb" hidden></label><button id="rscr" type="button" hidden>Retirer la scène</button><label>Murs <input type="color" id="rwall" value="#e8e2d6"></label><label>Sol <input type="color" id="rfloor" value="#8a6b4a"></label><label>Plafond <input type="color" id="rceil" value="#f4f1ea"></label><button id="rsfb" type="button">Images des murs, sol, plafond…</button><div id="rsfp" hidden></div></div>
   <button id="rback" type="button" hidden>← Retour</button>
   <div id="rtabs"></div><div id="rfade"></div>
   <div id="rgo" role="button" tabindex="0" aria-label="Entrer dans la galerie 3D"><span>▶ Entrer dans la galerie 3D</span></div>
@@ -2159,7 +2165,7 @@ body.ied #intro{cursor:default}
   var f=pl(W,H,rcfg.wall);f.position.set(0,H/2,D/2);f.rotation.y=Math.PI;
   var l=pl(D,H,rcfg.wall);l.position.set(-W/2,H/2,0);l.rotation.y=Math.PI/2;
   var r=pl(D,H,rcfg.wall);r.position.set(W/2,H/2,0);r.rotation.y=-Math.PI/2;
-  R.walls=[b,f,l,r];R.floor=fl;
+  R.walls=[b,f,l,r];R.floor=fl;R.ceil=ce;applySurf();
   sc.add(new THREE.AmbientLight(0xffffff,.75));
   [-3,3].forEach(function(x){var p=new THREE.PointLight(0xfff2dd,.9,14);p.position.set(x,H-.3,0);sc.add(p)});
   R.build=function(){
@@ -2209,8 +2215,9 @@ body.ied #intro{cursor:default}
  $('rt').oninput=function(){var o=R&&rm[R.foc];if(!o)return;o.t=this.value;$('rct').textContent=o.t;saveRm()};
  $('rd').oninput=function(){var o=R&&rm[R.foc];if(!o)return;o.d=this.value;$('rcd').textContent=o.d;saveRm()};
  $('rdel').onclick=function(){var i=R&&R.foc;if(!R||!R.rd||i<0||!rm[i])return;dbDel('r'+rm[i].id).catch(function(){});rm.splice(i,1);saveRm();R.build();backF()};
- $('rwall').oninput=function(){rcfg.wall=this.value;saveRm();if(R&&R.walls)R.walls.forEach(function(w){w.material.color.set(rcfg.wall)})};
- $('rfloor').oninput=function(){rcfg.floor=this.value;saveRm();if(R&&R.floor)R.floor.material.color.set(rcfg.floor)};
+ $('rwall').oninput=function(){rcfg.wall=this.value;saveRm();surfColor('wall')};
+ $('rfloor').oninput=function(){rcfg.floor=this.value;saveRm();surfColor('floor')};
+ $('rceil').oninput=function(){rcfg.ceil=this.value;saveRm();surfColor('ceil')};
  $('rimgs').onchange=function(){
   var fs=[].slice.call(this.files);this.value='';
   Promise.all(fs.map(function(f,k){return new Promise(function(ok){var r=new FileReader();r.onload=function(){var im=new Image();im.onload=function(){var s=Math.min(1,1600/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=im.width*s;c.height=im.height*s;c.getContext('2d').drawImage(im,0,0,c.width,c.height);c.toBlob(function(b){var id='i'+Date.now().toString(36)+k;dbPut('r'+id,b).then(function(){ok({id:id,t:f.name.replace(/\.[^.]+$/,''),d:'',r:im.width/im.height})}).catch(function(){ok(null)})},'image/jpeg',.85)};im.src=r.result};r.readAsDataURL(f)})})).then(function(a){rm=rm.concat(a.filter(Boolean)).slice(0,24);saveRm();if(R&&R.build)R.build()});
@@ -2236,7 +2243,7 @@ body.ied #intro{cursor:default}
   var f=pl(W,H,rcfg.wall);f.position.set(0,H/2,D/2);f.rotation.y=Math.PI;
   var l=pl(D,H,rcfg.wall);l.position.set(-W/2,H/2,0);l.rotation.y=Math.PI/2;
   var r=pl(D,H,rcfg.wall);r.position.set(W/2,H/2,0);r.rotation.y=-Math.PI/2;
-  R.walls=[b,f,l,r];R.floor=fl;
+  R.walls=[b,f,l,r];R.floor=fl;R.ceil=ce;applySurf();
   sc.add(new THREE.AmbientLight(0xffffff,.75));
   [-3,3].forEach(function(x){var p=new THREE.PointLight(0xfff2dd,.9,14);p.position.set(x,H-.3,0);sc.add(p)});
   R.build=function(){
@@ -2303,19 +2310,72 @@ body.ied #intro{cursor:default}
  try{RS=JSON.parse(localStorage.getItem(RSK)||'null')}catch(x){RS=null}
  if(!Array.isArray(RS)||!RS.length)RS=[{id:'r1',name:'Salle 1',wall:rcfg.wall,floor:rcfg.floor,items:rm}];
  RS.forEach(function(r){r.items=r.items||[];r.cap=r.cap||{}});
- rm=RS[0].items;rcfg={wall:RS[0].wall,floor:RS[0].floor};
+ rm=RS[0].items;rcfg=rcOf(RS[0]);
  $('rwall').value=rcfg.wall;$('rfloor').value=rcfg.floor;
  function saveRm(){
-  var r=RS[ri];r.items=rm;r.wall=rcfg.wall;r.floor=rcfg.floor;
+  var r=RS[ri];r.items=rm;r.wall=rcfg.wall;r.floor=rcfg.floor;r.ceil=rcfg.ceil;r.tx=rcfg.tx;
   if(R&&R.clk&&R.clk.length){r.cap={};R.clk.forEach(function(c){r.cap[c.name]={t:c.t,d:c.d}})}
   try{localStorage.setItem(RSK,JSON.stringify(RS))}catch(x){}
  }
+ /* surfaces de la salle : chaque surface (murs, sol, plafond) a une couleur et, en option, une image — répétée (motif de N mètres) ou unique (qui couvre la surface) */
+ function rcOf(r){return{wall:r.wall,floor:r.floor,ceil:r.ceil||'#f4f1ea',tx:r.tx||(r.tx={})}}
+ function surfMeshes(S){if(!R||!R.walls)return[];return S==='wall'?R.walls:S==='floor'?[R.floor]:(R.ceil?[R.ceil]:[])}
+ function surfColor(S){var t=rcfg.tx&&rcfg.tx[S];if(t&&t.k)return;surfMeshes(S).forEach(function(m){m.material.color.set(rcfg[S])})}
+ function applySurf(only){
+  if(!R||!R.walls)return;
+  try{$('rceil').value=rcfg.ceil}catch(x){}
+  ['wall','floor','ceil'].forEach(function(S){if(only&&only!==S)return;
+   var t=rcfg.tx&&rcfg.tx[S];
+   if(t&&t.k){surfTex(S,t);return}
+   surfMeshes(S).forEach(function(m){if(m.material.map){m.material.map.dispose();m.material.map=null}m.material.color.set(rcfg[S]);m.material.needsUpdate=true})});
+  syncSurfUI()}
+ function surfTex(S,t){
+  function put(img){
+   if(!rcfg.tx||rcfg.tx[S]!==t)return;
+   surfMeshes(S).forEach(function(m){
+    var g=m.geometry.parameters,w=g.width,h=g.height,ia=(img.naturalWidth/img.naturalHeight)||1,tx=new THREE.Texture(img);
+    tx.encoding=THREE.sRGBEncoding;tx.anisotropy=R.rd.capabilities.getMaxAnisotropy();
+    if(t.rep){var z=Math.max(.2,t.sz||2);tx.wrapS=tx.wrapT=THREE.RepeatWrapping;tx.repeat.set(w/z,h*ia/z)}
+    else{var pa=w/h;if(ia>pa){tx.repeat.set(pa/ia,1);tx.offset.set((1-pa/ia)/2,0)}else{tx.repeat.set(1,ia/pa);tx.offset.set(0,(1-ia/pa)/2)}}
+    tx.needsUpdate=true;if(m.material.map)m.material.map.dispose();
+    m.material.map=tx;m.material.color.set(0xffffff);m.material.needsUpdate=true})}
+  var c=R.simg=R.simg||{};
+  if(c[t.k]){put(c[t.k]);return}
+  dbGet(t.k).then(function(b){if(!b)return;var u=URL.createObjectURL(b),i=new Image();i.onload=function(){URL.revokeObjectURL(u);c[t.k]=i;put(i)};i.src=u}).catch(function(){})}
+ function shrinkImg(f){return new Promise(function(ok,ko){var u=URL.createObjectURL(f),i=new Image();
+  i.onload=function(){URL.revokeObjectURL(u);var w=i.naturalWidth,h=i.naturalHeight,m=Math.max(w,h);if(m<=2048){ok(f);return}
+   var k=2048/m,c=document.createElement('canvas');c.width=Math.round(w*k);c.height=Math.round(h*k);c.getContext('2d').drawImage(i,0,0,c.width,c.height);
+   c.toBlob(function(b){b?ok(b):ko(new Error('compression'))},'image/jpeg',.9)};
+  i.onerror=function(){ko(new Error('image illisible'))};i.src=u})}
+ function setSurfImg(S,f){
+  if(!/^image\//.test(f.type)||f.size>40e6){alert('Choisis une image (moins de 40 Mo).');return}
+  var r=RS[ri],old=rcfg.tx[S],k='rsf_'+r.id+'_'+S+'_'+Date.now().toString(36);
+  shrinkImg(f).then(function(b){return dbPut(k,b)}).then(function(){
+   rcfg.tx[S]={k:k,rep:old?old.rep:false,sz:old?old.sz:2};if(old&&old.k)dbDel(old.k).catch(function(){});
+   saveRm();applySurf(S)}).catch(function(){alert('Impossible d’enregistrer cette image.')})}
+ function clearSurfImg(S){var t=rcfg.tx[S];if(!t)return;delete rcfg.tx[S];if(t.k)dbDel(t.k).catch(function(){});saveRm();applySurf(S)}
+ function buildSurfUI(){var p=$('rsfp');if(!p||p._b)return;p._b=1;
+  [['wall','Murs'],['floor','Sol'],['ceil','Plafond']].forEach(function(a){var S=a[0],row=document.createElement('div');row.className='rsr';row.dataset.s=S;
+   row.innerHTML='<b>'+a[1]+'</b><label class="rb">Image…<input type="file" accept="image/*" hidden></label><button type="button" class="rsx" title="Retirer l’image (retour à la couleur)">✕</button><label class="rsk"><input type="checkbox" class="rsp"> Répéter</label><label class="rss">Motif <input type="range" class="rsz" min="0.5" max="8" step="0.1" value="2"> <span class="rsv">2 m</span></label>';
+   p.appendChild(row);
+   var fi=row.querySelector('input[type=file]'),ck=row.querySelector('.rsp'),rg=row.querySelector('.rsz');
+   fi.onchange=function(){var f=this.files&&this.files[0];this.value='';if(f)setSurfImg(S,f)};
+   row.querySelector('.rsx').onclick=function(){clearSurfImg(S)};
+   ck.onchange=function(){var t=rcfg.tx[S];if(!t)return;t.rep=ck.checked;saveRm();applySurf(S)};
+   rg.oninput=function(){var t=rcfg.tx[S];if(!t)return;t.sz=+rg.value;row.querySelector('.rsv').textContent=t.sz+' m';saveRm();applySurf(S)}});
+  $('rsfb').onclick=function(){p.hidden=!p.hidden;syncSurfUI()}}
+ function syncSurfUI(){var p=$('rsfp');if(!p||!p._b||!rcfg||!rcfg.tx)return;
+  [].forEach.call(p.querySelectorAll('.rsr'),function(row){var S=row.dataset.s,t=rcfg.tx[S],z=(t&&t.sz)||2;
+   row.querySelector('.rsx').hidden=!t;row.querySelector('.rsk').hidden=!t;row.querySelector('.rss').hidden=!(t&&t.rep);
+   row.querySelector('.rsp').checked=!!(t&&t.rep);row.querySelector('.rsz').value=z;row.querySelector('.rsv').textContent=z+' m';
+   row.querySelector('.rb').firstChild.textContent=t?'Changer l’image…':'Image…'})}
+ buildSurfUI();
  function roomList(){var r=RS[ri],b=rm.length?rm.slice(0,18):(r.scn?[]:DEMO);return b.concat(R&&R.clk?R.clk:[])}
  function slot(i){var k=i%9,p=SL[Math.floor(k/3)](k%3);p.y=Math.floor(i/9)%2?2.95:1.45;return p}
  function fillTabs(skip){var t=$('rtabs');t.innerHTML='';RS.forEach(function(r,i){var b=document.createElement('button');b.type='button';b.textContent=r.name;if(i===ri)b.className='on';b.onclick=function(){changeRoom(i)};t.appendChild(b)});t.style.display=RS.length<2?'none':'';if(!skip)$('rnm').value=RS[ri].name;$('rrm').disabled=RS.length<2;$('rscr').hidden=!RS[ri].scn}
  function changeRoom(k){if(k===ri||!RS[k])return;var f=$('rfade');f.style.opacity=1;setTimeout(function(){switchRoom(k);f.style.opacity=0},260)}
- function switchRoom(k){saveRm();ri=k;var r=RS[k];rm=r.items;rcfg={wall:r.wall,floor:r.floor};$('rwall').value=rcfg.wall;$('rfloor').value=rcfg.floor;fillTabs();if(R&&R.rd)applyRoom()}
- function applyRoom(){R.foc=-1;R.tw=null;R.home=null;R.yaw=0;R.pitch=0;R.walls.forEach(function(w){w.material.color.set(rcfg.wall)});R.floor.material.color.set(rcfg.floor);loadScene();R.build();showCap()}
+ function switchRoom(k){saveRm();ri=k;var r=RS[k];rm=r.items;rcfg=rcOf(r);$('rwall').value=rcfg.wall;$('rfloor').value=rcfg.floor;$('rceil').value=rcfg.ceil;fillTabs();if(R&&R.rd)applyRoom()}
+ function applyRoom(){R.foc=-1;R.tw=null;R.home=null;R.yaw=0;R.pitch=0;applySurf();loadScene();R.build();showCap()}
  function loadScene(){
   var r=RS[ri],sc=R.sc,ce=sc.children[1],on=!!r.scn;
   if(R.scn){sc.remove(R.scn);R.scn=null}
@@ -2368,8 +2428,8 @@ body.ied #intro{cursor:default}
   if(RS.length<2)return;var b=this;
   if(!b.dataset.c){b.dataset.c='1';b.textContent='Confirmer ?';setTimeout(function(){delete b.dataset.c;b.textContent='Supprimer la pièce'},3000);return}
   delete b.dataset.c;b.textContent='Supprimer la pièce';
-  var k=ri,r=RS[k];RS.splice(k,1);(r.items||[]).forEach(function(o){dbDel((o.k==='o'?'o':'r')+o.id).catch(function(){})});dbDel('osc'+r.id).catch(function(){});
-  ri=Math.max(0,k-1);var n=RS[ri];rm=n.items;rcfg={wall:n.wall,floor:n.floor};
+  var k=ri,r=RS[k];RS.splice(k,1);(r.items||[]).forEach(function(o){dbDel((o.k==='o'?'o':'r')+o.id).catch(function(){})});Object.keys(r.tx||{}).forEach(function(S){if(r.tx[S]&&r.tx[S].k)dbDel(r.tx[S].k).catch(function(){})});dbDel('osc'+r.id).catch(function(){});
+  ri=Math.max(0,k-1);var n=RS[ri];rm=n.items;rcfg=rcOf(n);
   $('rwall').value=rcfg.wall;$('rfloor').value=rcfg.floor;
   try{localStorage.setItem(RSK,JSON.stringify(RS))}catch(x){}
   fillTabs();if(R&&R.rd)applyRoom();
